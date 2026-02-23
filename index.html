@@ -3,349 +3,1084 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Gebäudetrocknung Wiegand – KI Analyse</title>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
+<title>Gebäudetrocknung Wiegand – KI Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg: #0d1117; --surface: #161b22; --surface2: #1c2330;
-    --border: #30363d; --accent: #e8a020; --text: #e6edf3;
-    --text-muted: #8b949e; --success: #3fb950; --danger: #f85149;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; font-weight: 300; min-height: 100vh; }
-  body::before { content: ''; position: fixed; inset: 0; background-image: linear-gradient(rgba(232,160,32,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(232,160,32,0.03) 1px, transparent 1px); background-size: 40px 40px; pointer-events: none; z-index: 0; }
+:root {
+  --blue: #1a56db;
+  --blue-dark: #1e429f;
+  --blue-light: #ebf5ff;
+  --blue-mid: #3b82f6;
+  --white: #ffffff;
+  --gray-50: #f9fafb;
+  --gray-100: #f3f4f6;
+  --gray-200: #e5e7eb;
+  --gray-300: #d1d5db;
+  --gray-400: #9ca3af;
+  --gray-500: #6b7280;
+  --gray-600: #4b5563;
+  --gray-700: #374151;
+  --gray-800: #1f2937;
+  --green: #059669;
+  --green-light: #d1fae5;
+  --red: #dc2626;
+  --red-light: #fee2e2;
+  --yellow: #d97706;
+  --yellow-light: #fef3c7;
+  --shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.06);
+  --shadow-lg: 0 10px 15px rgba(0,0,0,0.1), 0 4px 6px rgba(0,0,0,0.05);
+  --radius: 12px;
+  --radius-sm: 8px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Inter', sans-serif; background: var(--gray-50); color: var(--gray-800); min-height: 100vh; font-size: 14px; }
 
-  #loginScreen { position: fixed; inset: 0; background: var(--bg); display: flex; align-items: center; justify-content: center; z-index: 100; }
-  .login-box { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 48px 40px; width: 100%; max-width: 420px; text-align: center; }
-  .login-box h1 { font-family: 'Bebas Neue', sans-serif; font-size: 1.8rem; letter-spacing: 0.1em; margin-bottom: 4px; }
-  .login-box h1 span { color: var(--accent); }
-  .login-box p { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 32px; }
-  .login-box input { width: 100%; background: var(--surface2); border: 1px solid var(--border); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 1rem; padding: 14px 16px; border-radius: 10px; outline: none; margin-bottom: 16px; text-align: center; letter-spacing: 0.2em; }
-  .login-box input:focus { border-color: var(--accent); }
-  .login-btn { width: 100%; background: var(--accent); color: #0d1117; border: none; font-family: 'Bebas Neue', sans-serif; font-size: 1.1rem; letter-spacing: 0.15em; padding: 16px; border-radius: 10px; cursor: pointer; }
-  .login-error { color: var(--danger); font-size: 0.85rem; margin-top: 12px; display: none; }
+/* ===== LOGIN ===== */
+#loginScreen {
+  position: fixed; inset: 0;
+  background: linear-gradient(135deg, #1e3a8a 0%, #1a56db 50%, #3b82f6 100%);
+  display: flex; align-items: center; justify-content: center; z-index: 200;
+}
+.login-card {
+  background: white; border-radius: 20px; padding: 48px 44px;
+  width: 100%; max-width: 420px; box-shadow: var(--shadow-lg);
+  text-align: center;
+}
+.login-logo {
+  width: 64px; height: 64px; background: var(--blue-light);
+  border-radius: 16px; display: flex; align-items: center; justify-content: center;
+  font-size: 28px; margin: 0 auto 24px;
+}
+.login-card h1 { font-size: 22px; font-weight: 700; color: var(--gray-800); margin-bottom: 4px; }
+.login-card p { color: var(--gray-500); font-size: 13px; margin-bottom: 32px; }
+.login-label { text-align: left; font-size: 12px; font-weight: 600; color: var(--gray-600); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 24px; }
+.profile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 24px; }
+.profile-btn {
+  border: 2px solid var(--gray-200); border-radius: var(--radius-sm);
+  padding: 12px 8px; cursor: pointer; transition: all 0.2s;
+  background: white; text-align: center;
+}
+.profile-btn:hover { border-color: var(--blue); background: var(--blue-light); }
+.profile-btn.selected { border-color: var(--blue); background: var(--blue-light); }
+.profile-btn .avatar { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; margin: 0 auto 6px; }
+.profile-btn .pname { font-size: 11px; font-weight: 600; color: var(--gray-700); }
+.profile-btn .prole { font-size: 10px; color: var(--gray-500); }
+.login-input {
+  width: 100%; border: 1.5px solid var(--gray-200); border-radius: var(--radius-sm);
+  padding: 12px 14px; font-family: 'Inter', sans-serif; font-size: 14px;
+  outline: none; transition: border-color 0.2s; margin-bottom: 14px;
+  text-align: center; letter-spacing: 0.1em;
+}
+.login-input:focus { border-color: var(--blue); }
+.login-btn {
+  width: 100%; background: var(--blue); color: white; border: none;
+  border-radius: var(--radius-sm); padding: 13px; font-size: 14px; font-weight: 600;
+  cursor: pointer; transition: all 0.2s;
+}
+.login-btn:hover { background: var(--blue-dark); }
+.login-error { color: var(--red); font-size: 12px; margin-top: 10px; display: none; }
 
-  #app { display: none; position: relative; z-index: 1; }
-  .container { max-width: 860px; margin: 0 auto; padding: 40px 24px; }
-  .header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px solid var(--border); }
-  .logo-area h1 { font-family: 'Bebas Neue', sans-serif; font-size: 2rem; letter-spacing: 0.08em; line-height: 1; }
-  .logo-area h1 span { color: var(--accent); }
-  .logo-area p { font-size: 0.75rem; color: var(--text-muted); letter-spacing: 0.15em; text-transform: uppercase; margin-top: 6px; }
-  .badge { background: rgba(232,160,32,0.12); border: 1px solid rgba(232,160,32,0.3); color: var(--accent); font-size: 0.7rem; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; padding: 5px 12px; border-radius: 20px; }
+/* ===== APP LAYOUT ===== */
+#app { display: none; min-height: 100vh; }
 
-  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 28px; margin-bottom: 20px; }
-  .card h2 { font-family: 'Bebas Neue', sans-serif; font-size: 1.1rem; letter-spacing: 0.1em; color: var(--accent); margin-bottom: 18px; }
+/* SIDEBAR */
+.sidebar {
+  position: fixed; left: 0; top: 0; bottom: 0; width: 240px;
+  background: white; border-right: 1px solid var(--gray-200);
+  display: flex; flex-direction: column; z-index: 100;
+}
+.sidebar-header {
+  padding: 20px; border-bottom: 1px solid var(--gray-100);
+}
+.sidebar-logo { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+.sidebar-logo .icon { width: 32px; height: 32px; background: var(--blue); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+.sidebar-logo span { font-size: 13px; font-weight: 700; color: var(--gray-800); line-height: 1.2; }
+.sidebar-sub { font-size: 11px; color: var(--gray-400); margin-top: 2px; }
 
-  .api-row { display: flex; align-items: center; gap: 12px; }
-  .api-row label { font-size: 0.78rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; white-space: nowrap; font-weight: 500; }
-  .api-row input { flex: 1; background: var(--surface2); border: 1px solid var(--border); color: var(--text); font-family: monospace; font-size: 0.85rem; padding: 10px 14px; border-radius: 8px; outline: none; }
-  .api-row input:focus { border-color: var(--accent); }
+.sidebar-nav { flex: 1; padding: 12px 10px; overflow-y: auto; }
+.nav-section { margin-bottom: 20px; }
+.nav-section-title { font-size: 10px; font-weight: 600; color: var(--gray-400); text-transform: uppercase; letter-spacing: 0.08em; padding: 0 8px; margin-bottom: 4px; }
+.nav-item {
+  display: flex; align-items: center; gap: 10px; padding: 9px 10px;
+  border-radius: var(--radius-sm); cursor: pointer; transition: all 0.15s;
+  color: var(--gray-600); font-size: 13px; font-weight: 500;
+  text-decoration: none; width: 100%; border: none; background: none; text-align: left;
+}
+.nav-item:hover { background: var(--gray-50); color: var(--gray-800); }
+.nav-item.active { background: var(--blue-light); color: var(--blue); }
+.nav-icon { font-size: 16px; flex-shrink: 0; }
 
-  .field { margin-bottom: 16px; }
-  .field label { display: block; font-size: 0.78rem; font-weight: 500; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; }
-  .field input { width: 100%; background: var(--surface2); border: 1px solid var(--border); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 0.95rem; padding: 12px 16px; border-radius: 10px; outline: none; }
-  .field input:focus { border-color: var(--accent); }
-  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.sidebar-user { padding: 14px; border-top: 1px solid var(--gray-100); }
+.user-card { display: flex; align-items: center; gap: 10px; }
+.user-avatar { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+.user-info { flex: 1; min-width: 0; }
+.user-name { font-size: 13px; font-weight: 600; color: var(--gray-800); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.user-role { font-size: 11px; color: var(--gray-400); }
+.logout-btn { background: none; border: none; color: var(--gray-400); cursor: pointer; font-size: 16px; padding: 4px; border-radius: 6px; }
+.logout-btn:hover { background: var(--gray-100); color: var(--gray-600); }
 
-  .upload-zone { border: 2px dashed var(--border); border-radius: 12px; padding: 32px 20px; text-align: center; cursor: pointer; transition: all 0.2s; position: relative; }
-  .upload-zone:hover { border-color: var(--accent); background: rgba(232,160,32,0.04); }
-  .upload-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
-  .upload-icon { font-size: 2rem; margin-bottom: 10px; }
-  .upload-zone p { color: var(--text-muted); font-size: 0.88rem; }
-  .upload-zone p span { color: var(--accent); }
-  .preview-img { margin-top: 14px; display: none; }
-  .preview-img img { max-width: 100%; max-height: 250px; border-radius: 8px; border: 1px solid var(--border); }
-  .preview-img p { margin-top: 6px; color: var(--success); font-size: 0.82rem; }
+/* MAIN */
+.main { margin-left: 240px; min-height: 100vh; }
+.topbar {
+  background: white; border-bottom: 1px solid var(--gray-200);
+  padding: 16px 28px; display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 50;
+}
+.topbar-title { font-size: 18px; font-weight: 700; color: var(--gray-800); }
+.topbar-sub { font-size: 12px; color: var(--gray-400); margin-top: 1px; }
+.topbar-actions { display: flex; gap: 10px; align-items: center; }
 
-  .audio-section { text-align: center; }
-  .record-btn { width: 80px; height: 80px; border-radius: 50%; border: 3px solid var(--accent); background: var(--surface2); color: var(--accent); font-size: 2rem; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; }
-  .record-btn.recording { border-color: var(--danger); color: var(--danger); animation: pulse 1s infinite; }
-  @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
-  .record-status { color: var(--text-muted); font-size: 0.88rem; margin-bottom: 12px; }
-  .record-status.active { color: var(--danger); font-weight: 500; }
-  .audio-preview { display: none; margin-top: 12px; }
-  .audio-preview audio { width: 100%; border-radius: 8px; }
-  .audio-preview p { color: var(--success); font-size: 0.82rem; margin-top: 6px; }
-  .transcript-box { display: none; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-top: 12px; font-size: 0.88rem; line-height: 1.6; text-align: left; }
-  .transcript-box.active { display: block; }
-  .transcript-label { font-size: 0.72rem; color: var(--accent); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 6px; font-weight: 500; }
+.content { padding: 28px; }
 
-  .btn-analyze { width: 100%; background: var(--accent); color: #0d1117; border: none; font-family: 'Bebas Neue', sans-serif; font-size: 1.1rem; letter-spacing: 0.15em; padding: 18px; border-radius: 10px; cursor: pointer; transition: all 0.2s; margin-bottom: 20px; }
-  .btn-analyze:hover { opacity: 0.9; transform: translateY(-1px); }
-  .btn-analyze:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+/* PAGES */
+.page { display: none; }
+.page.active { display: block; }
 
-  .loading { display: none; text-align: center; padding: 48px; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; margin-bottom: 20px; }
-  .loading.active { display: block; }
-  .spinner { width: 40px; height: 40px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .loading p { color: var(--text-muted); font-size: 0.9rem; }
-  .loading p span { color: var(--accent); }
+/* CARDS */
+.card {
+  background: white; border: 1px solid var(--gray-200);
+  border-radius: var(--radius); padding: 24px; margin-bottom: 20px;
+  box-shadow: var(--shadow);
+}
+.card-title { font-size: 15px; font-weight: 600; color: var(--gray-800); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+.card-title .icon { font-size: 18px; }
 
-  .result-card { display: none; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 32px; margin-bottom: 20px; }
-  .result-card.active { display: block; }
-  .result-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
-  .result-header h2 { font-family: 'Bebas Neue', sans-serif; font-size: 1.3rem; letter-spacing: 0.1em; color: var(--success); }
-  .btn-copy { background: var(--surface2); border: 1px solid var(--border); color: var(--text-muted); font-family: 'DM Sans', sans-serif; font-size: 0.8rem; padding: 8px 16px; border-radius: 8px; cursor: pointer; }
-  .btn-copy:hover { border-color: var(--accent); color: var(--accent); }
-  .result-content { font-size: 0.95rem; line-height: 1.8; white-space: pre-wrap; }
-  .result-content h3 { font-family: 'Bebas Neue', sans-serif; font-size: 1.05rem; letter-spacing: 0.08em; color: var(--accent); margin: 20px 0 6px; }
+/* GRID */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
 
-  .error-box { display: none; background: rgba(248,81,73,0.08); border: 1px solid rgba(248,81,73,0.3); color: var(--danger); padding: 14px 18px; border-radius: 10px; font-size: 0.9rem; margin-bottom: 16px; }
-  .error-box.active { display: block; }
-  .footer { text-align: center; color: var(--text-muted); font-size: 0.75rem; padding-top: 24px; border-top: 1px solid var(--border); }
+/* FORM */
+.field { margin-bottom: 14px; }
+.field label { display: block; font-size: 12px; font-weight: 600; color: var(--gray-600); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.04em; }
+.field input, .field select, .field textarea {
+  width: 100%; border: 1.5px solid var(--gray-200); border-radius: var(--radius-sm);
+  padding: 10px 12px; font-family: 'Inter', sans-serif; font-size: 13px;
+  color: var(--gray-800); outline: none; transition: border-color 0.2s;
+  background: white;
+}
+.field input:focus, .field select:focus, .field textarea:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(26,86,219,0.08); }
+.field textarea { min-height: 90px; resize: vertical; line-height: 1.6; }
+.field select { cursor: pointer; }
 
-  @media (max-width: 600px) { .row { grid-template-columns: 1fr; } .header { flex-direction: column; gap: 12px; } .api-row { flex-direction: column; align-items: flex-start; } }
+/* API KEY */
+.api-bar {
+  background: var(--blue-light); border: 1px solid #bfdbfe;
+  border-radius: var(--radius-sm); padding: 12px 16px;
+  display: flex; align-items: center; gap: 12px; margin-bottom: 20px;
+}
+.api-bar label { font-size: 12px; font-weight: 600; color: var(--blue-dark); white-space: nowrap; }
+.api-bar input {
+  flex: 1; border: 1px solid #bfdbfe; border-radius: 6px; padding: 8px 12px;
+  font-family: monospace; font-size: 12px; outline: none; background: white;
+  color: var(--gray-700);
+}
+.api-bar input:focus { border-color: var(--blue); }
+
+/* UPLOAD */
+.upload-zone {
+  border: 2px dashed var(--gray-300); border-radius: var(--radius);
+  padding: 28px 20px; text-align: center; cursor: pointer;
+  transition: all 0.2s; position: relative;
+}
+.upload-zone:hover { border-color: var(--blue); background: var(--blue-light); }
+.upload-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+.upload-icon { font-size: 2rem; margin-bottom: 8px; }
+.upload-zone p { color: var(--gray-500); font-size: 13px; }
+.upload-zone p span { color: var(--blue); font-weight: 500; }
+.preview-wrap { margin-top: 12px; display: none; }
+.preview-wrap img { max-width: 100%; max-height: 200px; border-radius: 8px; border: 1px solid var(--gray-200); }
+.preview-wrap p { margin-top: 6px; color: var(--green); font-size: 12px; font-weight: 500; }
+
+/* AUDIO */
+.audio-section { text-align: center; padding: 8px 0; }
+.record-btn {
+  width: 72px; height: 72px; border-radius: 50%; border: 2.5px solid var(--blue);
+  background: var(--blue-light); color: var(--blue); font-size: 1.8rem;
+  cursor: pointer; transition: all 0.2s; display: flex; align-items: center;
+  justify-content: center; margin: 0 auto 12px;
+}
+.record-btn:hover { background: var(--blue); color: white; }
+.record-btn.recording { border-color: var(--red); background: var(--red-light); color: var(--red); animation: pulse 1s infinite; }
+@keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.06)} }
+.record-status { color: var(--gray-400); font-size: 12px; font-weight: 500; }
+.record-status.active { color: var(--red); }
+.audio-preview { display: none; margin-top: 12px; }
+.audio-preview audio { width: 100%; }
+.transcript-box { display: none; background: var(--blue-light); border: 1px solid #bfdbfe; border-radius: var(--radius-sm); padding: 12px; margin-top: 10px; font-size: 12px; line-height: 1.6; text-align: left; color: var(--gray-700); }
+.transcript-box.active { display: block; }
+.transcript-label { font-size: 11px; font-weight: 600; color: var(--blue); margin-bottom: 4px; }
+
+/* MODES */
+.modes { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 16px; }
+.mode-chip {
+  border: 1.5px solid var(--gray-200); border-radius: var(--radius-sm);
+  padding: 10px 6px; text-align: center; cursor: pointer; transition: all 0.2s;
+  background: white; font-size: 11px; font-weight: 600; color: var(--gray-500);
+}
+.mode-chip:hover { border-color: var(--blue); color: var(--blue); }
+.mode-chip.on { border-color: var(--blue); background: var(--blue-light); color: var(--blue); }
+.mode-chip .micon { font-size: 1.2rem; display: block; margin-bottom: 3px; }
+
+/* BUTTONS */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  border: none; border-radius: var(--radius-sm); padding: 10px 18px;
+  font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: all 0.2s;
+}
+.btn-primary { background: var(--blue); color: white; }
+.btn-primary:hover { background: var(--blue-dark); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-secondary { background: white; color: var(--gray-700); border: 1.5px solid var(--gray-200); }
+.btn-secondary:hover { background: var(--gray-50); border-color: var(--gray-300); }
+.btn-success { background: var(--green); color: white; }
+.btn-success:hover { opacity: 0.9; }
+.btn-full { width: 100%; justify-content: center; padding: 12px; font-size: 14px; }
+
+/* LOADING */
+.loading { display: none; text-align: center; padding: 40px; }
+.loading.on { display: block; }
+.spinner { width: 36px; height: 36px; border: 3px solid var(--gray-200); border-top-color: var(--blue); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 14px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading p { color: var(--gray-500); font-size: 13px; }
+.loading span { color: var(--blue); font-weight: 600; }
+
+/* RESULT */
+.result-box { display: none; }
+.result-box.on { display: block; }
+.result-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--gray-100); }
+.result-title { font-size: 15px; font-weight: 600; color: var(--green); display: flex; align-items: center; gap: 6px; }
+.result-actions { display: flex; gap: 8px; }
+.result-content { font-size: 13px; line-height: 1.85; color: var(--gray-700); }
+.result-content h3 { font-size: 12px; font-weight: 700; color: var(--blue-dark); text-transform: uppercase; letter-spacing: 0.06em; margin: 20px 0 8px; padding-bottom: 4px; border-bottom: 1px solid var(--gray-100); }
+.result-content h3:first-child { margin-top: 0; }
+.result-content strong { color: var(--gray-800); font-weight: 600; }
+
+/* ERROR */
+.error-bar { display: none; background: var(--red-light); border: 1px solid #fca5a5; color: var(--red); padding: 10px 14px; border-radius: var(--radius-sm); font-size: 13px; margin-bottom: 14px; }
+.error-bar.on { display: block; }
+
+/* STATS */
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+.stat-card { background: white; border: 1px solid var(--gray-200); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); }
+.stat-label { font-size: 11px; font-weight: 600; color: var(--gray-400); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; }
+.stat-value { font-size: 26px; font-weight: 700; color: var(--gray-800); }
+.stat-sub { font-size: 11px; color: var(--gray-400); margin-top: 4px; }
+.stat-icon { float: right; font-size: 24px; }
+
+/* HISTORY */
+.history-item { display: flex; align-items: center; gap: 14px; padding: 14px; border: 1px solid var(--gray-200); border-radius: var(--radius-sm); margin-bottom: 10px; cursor: pointer; transition: all 0.15s; background: white; }
+.history-item:hover { border-color: var(--blue); background: var(--blue-light); }
+.history-icon { width: 40px; height: 40px; border-radius: 10px; background: var(--blue-light); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+.history-info { flex: 1; }
+.history-info h4 { font-size: 13px; font-weight: 600; color: var(--gray-800); margin-bottom: 2px; }
+.history-info p { font-size: 11px; color: var(--gray-400); }
+.history-badge { font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 20px; }
+.badge-new { background: var(--green-light); color: var(--green); }
+.badge-sent { background: var(--blue-light); color: var(--blue); }
+.empty { text-align: center; padding: 40px; color: var(--gray-400); font-size: 13px; }
+
+/* SEND TO CHEF */
+.send-chef { background: linear-gradient(135deg, var(--blue-light), #dbeafe); border: 1px solid #bfdbfe; border-radius: var(--radius); padding: 20px; margin-top: 16px; }
+.send-chef h3 { font-size: 14px; font-weight: 600; color: var(--blue-dark); margin-bottom: 6px; }
+.send-chef p { font-size: 12px; color: var(--gray-600); margin-bottom: 14px; }
+.send-chef textarea { width: 100%; border: 1px solid #bfdbfe; border-radius: var(--radius-sm); padding: 10px 12px; font-family: 'Inter', sans-serif; font-size: 12px; min-height: 70px; outline: none; background: white; resize: vertical; margin-bottom: 10px; }
+
+/* CHEF INBOX */
+.inbox-item { background: white; border: 1px solid var(--gray-200); border-radius: var(--radius-sm); padding: 16px; margin-bottom: 10px; box-shadow: var(--shadow); }
+.inbox-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.inbox-from { font-size: 12px; font-weight: 600; color: var(--blue); }
+.inbox-time { font-size: 11px; color: var(--gray-400); }
+.inbox-content { font-size: 13px; color: var(--gray-700); line-height: 1.6; background: var(--gray-50); border-radius: 6px; padding: 10px; margin-bottom: 8px; max-height: 120px; overflow-y: auto; }
+.inbox-note { font-size: 12px; color: var(--gray-600); font-style: italic; }
+
+@media (max-width: 768px) {
+  .sidebar { width: 200px; }
+  .main { margin-left: 200px; }
+  .grid-2, .grid-3, .stats { grid-template-columns: 1fr; }
+  .modes { grid-template-columns: 1fr 1fr; }
+}
 </style>
 </head>
 <body>
 
+<!-- LOGIN -->
 <div id="loginScreen">
-  <div class="login-box">
-    <h1>GEBÄUDE<span>TROCKNUNG</span> WIEGAND</h1>
-    <p>Internes Tool – nur für Mitarbeiter</p>
-    <input type="password" id="loginInput" placeholder="Passwort eingeben" onkeydown="if(event.key==='Enter')doLogin()" />
-    <button class="login-btn" onclick="doLogin()">EINLOGGEN</button>
-    <p class="login-error" id="loginError">❌ Falsches Passwort</p>
+  <div class="login-card">
+    <div class="login-logo">💧</div>
+    <h1>Gebäudetrocknung Wiegand</h1>
+    <p>KI-Portal für Mitarbeiter · Bitte Profil wählen</p>
+    <div class="login-label">Profil auswählen</div>
+    <div class="profile-grid" id="profileGrid">
+      <div class="profile-btn" onclick="selectProfile(this,'Werner Wiegand','Geschäftsführer','👔','chef')">
+        <div class="avatar" style="background:#dbeafe">👔</div>
+        <div class="pname">Werner Wiegand</div>
+        <div class="prole">Geschäftsführer</div>
+      </div>
+      <div class="profile-btn" onclick="selectProfile(this,'Rayk Wiegand','Geschäftsführer','👨‍💼','chef')">
+        <div class="avatar" style="background:#dbeafe">👨‍💼</div>
+        <div class="pname">Rayk Wiegand</div>
+        <div class="prole">Geschäftsführer</div>
+      </div>
+      <div class="profile-btn" onclick="selectProfile(this,'Marius Weihseller','Trocknungstechniker','🔧','mitarbeiter')">
+        <div class="avatar" style="background:#d1fae5">🔧</div>
+        <div class="pname">Marius W.</div>
+        <div class="prole">Trocknungstechniker</div>
+      </div>
+      <div class="profile-btn" onclick="selectProfile(this,'Ralf Kern','Schreiner & Elektriker','⚡','mitarbeiter')">
+        <div class="avatar" style="background:#fef3c7">⚡</div>
+        <div class="pname">Ralf Kern</div>
+        <div class="prole">Elektriker</div>
+      </div>
+      <div class="profile-btn" onclick="selectProfile(this,'Marcel Hartmann','Fliesenleger','🪟','mitarbeiter')">
+        <div class="avatar" style="background:#fce7f3">🪟</div>
+        <div class="pname">Marcel H.</div>
+        <div class="prole">Fliesenleger</div>
+      </div>
+      <div class="profile-btn" onclick="selectProfile(this,'Rico Baumann','Trocknungstechniker','💧','mitarbeiter')">
+        <div class="avatar" style="background:#dbeafe">💧</div>
+        <div class="pname">Rico Baumann</div>
+        <div class="prole">Trocknungstechniker</div>
+      </div>
+    </div>
+    <input class="login-input" type="password" id="loginInput" placeholder="Passwort: wiegand2024" onkeydown="if(event.key==='Enter')doLogin()" />
+    <button class="login-btn" onclick="doLogin()">Einloggen →</button>
+    <p class="login-error" id="loginError">❌ Falsches Passwort oder kein Profil gewählt</p>
   </div>
 </div>
 
+<!-- APP -->
 <div id="app">
-  <div class="container">
-    <div class="header">
-      <div class="logo-area">
-        <h1>GEBÄUDE<span>TROCKNUNG</span> WIEGAND</h1>
-        <p>KI-gestützte Sanierungsanalyse · Intern</p>
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">
+        <div class="icon">💧</div>
+        <span>Gebäudetrocknung<br>Wiegand</span>
       </div>
-      <div class="badge">🔒 Nur intern</div>
+      <div class="sidebar-sub">KI-Portal · Intern</div>
     </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <div class="nav-section-title">Hauptmenü</div>
+        <button class="nav-item active" onclick="showPage('dashboard',this)"><span class="nav-icon">📊</span> Dashboard</button>
+        <button class="nav-item" onclick="showPage('analyse',this)" id="nav-analyse"><span class="nav-icon">🔍</span> KI-Analyse</button>
+        <button class="nav-item" onclick="showPage('angebot',this)"><span class="nav-icon">💶</span> Angebot</button>
+        <button class="nav-item" onclick="showPage('vertrag',this)"><span class="nav-icon">📋</span> Vertrag</button>
+      </div>
+      <div class="nav-section" id="chef-nav" style="display:none">
+        <div class="nav-section-title">Chef-Bereich</div>
+        <button class="nav-item" onclick="showPage('inbox',this)"><span class="nav-icon">📬</span> Posteingang <span id="inboxBadge" style="background:var(--red);color:white;font-size:10px;padding:2px 6px;border-radius:10px;margin-left:4px;display:none">0</span></button>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">Verlauf</div>
+        <button class="nav-item" onclick="showPage('verlauf',this)"><span class="nav-icon">📂</span> Meine Analysen</button>
+      </div>
+    </nav>
+    <div class="sidebar-user">
+      <div class="user-card">
+        <div class="user-avatar" id="sidebarAvatar">👤</div>
+        <div class="user-info">
+          <div class="user-name" id="sidebarName">Mitarbeiter</div>
+          <div class="user-role" id="sidebarRole">Rolle</div>
+        </div>
+        <button class="logout-btn" onclick="doLogout()" title="Abmelden">↩</button>
+      </div>
+    </div>
+  </div>
 
-    <div class="card">
-      <h2>API Einstellung</h2>
-      <div class="api-row">
-        <label>OpenAI Key</label>
+  <div class="main">
+    <div class="topbar">
+      <div>
+        <div class="topbar-title" id="pageTitle">Dashboard</div>
+        <div class="topbar-sub" id="pageSubtitle">Willkommen zurück</div>
+      </div>
+      <div class="topbar-actions">
+        <span style="font-size:12px;color:var(--gray-400)" id="topbarDate"></span>
+      </div>
+    </div>
+    <div class="content">
+
+      <!-- API BAR -->
+      <div class="api-bar">
+        <label>🔑 OpenAI API Key</label>
         <input type="password" id="apiKey" placeholder="sk-..." />
       </div>
-    </div>
 
-    <div class="error-box" id="errorBox"></div>
+      <div class="error-bar" id="errorBar"></div>
 
-    <div class="card">
-      <h2>Objekt & Schaden</h2>
-      <div class="row">
-        <div class="field">
-          <label>Objekt / Adresse</label>
-          <input type="text" id="objekt" placeholder="z.B. EFH, Musterstr. 5" />
+      <!-- DASHBOARD -->
+      <div class="page active" id="page-dashboard">
+        <div class="stats">
+          <div class="stat-card">
+            <div class="stat-icon">🔍</div>
+            <div class="stat-label">Analysen heute</div>
+            <div class="stat-value" id="stat-analysen">0</div>
+            <div class="stat-sub">KI-Analysen erstellt</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">💶</div>
+            <div class="stat-label">Angebote</div>
+            <div class="stat-value" id="stat-angebote">0</div>
+            <div class="stat-sub">Gesamt erstellt</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">📋</div>
+            <div class="stat-label">Verträge</div>
+            <div class="stat-value" id="stat-vertraege">0</div>
+            <div class="stat-sub">Gesamt erstellt</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">📬</div>
+            <div class="stat-label">An Chef gesendet</div>
+            <div class="stat-value" id="stat-gesendet">0</div>
+            <div class="stat-sub">Zur Überprüfung</div>
+          </div>
         </div>
-        <div class="field">
-          <label>Art des Schadens</label>
-          <input type="text" id="schadensart" placeholder="z.B. Wasserschaden" />
+        <div class="card">
+          <div class="card-title"><span class="icon">⚡</span> Schnellstart</div>
+          <div class="grid-3">
+            <button class="btn btn-primary" style="justify-content:center;padding:14px" onclick="showPage('analyse',document.querySelector('[onclick*=analyse]'))">🔍 Neue Analyse starten</button>
+            <button class="btn btn-secondary" style="justify-content:center;padding:14px" onclick="showPage('angebot',document.querySelectorAll('.nav-item')[2])">💶 Angebot erstellen</button>
+            <button class="btn btn-secondary" style="justify-content:center;padding:14px" onclick="showPage('vertrag',document.querySelectorAll('.nav-item')[3])">📋 Vertrag erstellen</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title"><span class="icon">📂</span> Letzte Aktivitäten</div>
+          <div id="dashHistory"><div class="empty">Noch keine Aktivitäten</div></div>
         </div>
       </div>
-    </div>
 
-    <div class="card">
-      <h2>📷 Foto hochladen</h2>
-      <div class="upload-zone">
-        <input type="file" id="fileInput" accept="image/*" onchange="handleFile(this)" />
-        <div class="upload-icon">📷</div>
-        <p>Foto hier ablegen oder <span>klicken zum Auswählen</span></p>
-        <div class="preview-img" id="previewImg">
-          <img id="previewImgEl" src="" alt="Vorschau" />
-          <p id="fileName"></p>
+      <!-- ANALYSE -->
+      <div class="page" id="page-analyse">
+        <div class="card">
+          <div class="card-title"><span class="icon">📋</span> Objektdaten</div>
+          <div class="grid-2">
+            <div class="field"><label>Objekt / Adresse</label><input type="text" id="objekt" placeholder="z.B. EFH, Musterstr. 5, Eschwege" /></div>
+            <div class="field"><label>Auftraggeber</label><input type="text" id="auftraggeber" placeholder="z.B. Max Mustermann" /></div>
+          </div>
+          <div class="grid-3">
+            <div class="field">
+              <label>Art des Schadens</label>
+              <select id="schadensart">
+                <option value="">Bitte wählen...</option>
+                <option>Wasserschaden</option>
+                <option>Rohrbruch</option>
+                <option>Schimmelbefall</option>
+                <option>Leckage</option>
+                <option>Überschwemmung</option>
+                <option>Feuchtigkeit in Wänden</option>
+                <option>Sonstiges</option>
+              </select>
+            </div>
+            <div class="field"><label>Betroffene Fläche (m²)</label><input type="number" id="flaeche" placeholder="z.B. 25" /></div>
+            <div class="field">
+              <label>Versicherungsfall</label>
+              <select id="versicherung"><option>Nein</option><option>Ja</option><option>Unklar</option></select>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-title"><span class="icon">📷</span> Foto hochladen</div>
+            <div class="upload-zone">
+              <input type="file" id="fileInput" accept="image/*" onchange="handleFile(this)" />
+              <div class="upload-icon">📷</div>
+              <p>Foto ablegen oder <span>auswählen</span></p>
+              <div class="preview-wrap" id="previewWrap">
+                <img id="previewImg" src="" alt="" />
+                <p id="fileName"></p>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title"><span class="icon">🎤</span> Sprachaufnahme</div>
+            <div class="audio-section">
+              <button class="record-btn" id="recordBtn" onclick="toggleRecording()">🎤</button>
+              <p class="record-status" id="recordStatus">Drücken zum Aufnehmen</p>
+              <div class="audio-preview" id="audioPreview">
+                <audio id="audioPlayer" controls></audio>
+                <p style="color:var(--green);font-size:12px;margin-top:6px">✓ Aufnahme gespeichert</p>
+              </div>
+              <div class="transcript-box" id="transcriptBox">
+                <div class="transcript-label">🗣️ Transkript</div>
+                <div id="transcriptText"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title"><span class="icon">⚙️</span> Ausgabe wählen</div>
+          <div class="modes">
+            <div class="mode-chip on" id="m-analyse" onclick="toggleMode('analyse')"><span class="micon">🔍</span>Analyse</div>
+            <div class="mode-chip on" id="m-konzept" onclick="toggleMode('konzept')"><span class="micon">📋</span>Konzept</div>
+            <div class="mode-chip on" id="m-kosten" onclick="toggleMode('kosten')"><span class="micon">💶</span>Kosten</div>
+            <div class="mode-chip" id="m-foerder" onclick="toggleMode('foerder')"><span class="micon">🏦</span>Förderung</div>
+          </div>
+          <button class="btn btn-primary btn-full" id="analyzeBtn" onclick="runAnalyse()">🔍 KI-Analyse starten</button>
+        </div>
+
+        <div class="loading" id="loading-analyse"><div class="spinner"></div><p id="loadingText">KI analysiert... <span>Bitte warten</span></p></div>
+
+        <div class="card result-box" id="result-analyse">
+          <div class="result-header">
+            <div class="result-title">✅ Analyse abgeschlossen</div>
+            <div class="result-actions">
+              <button class="btn btn-secondary" onclick="copyEl('analyseContent')">📋 Kopieren</button>
+              <button class="btn btn-secondary" onclick="saveAnalyse()">💾 Speichern</button>
+            </div>
+          </div>
+          <div class="result-content" id="analyseContent"></div>
+          <div class="send-chef" id="sendChefBox">
+            <h3>📬 An Herrn Wiegand senden</h3>
+            <p>Diese Analyse direkt an den Chef zur Überprüfung senden.</p>
+            <textarea id="chefNote" placeholder="Optionale Notiz an Herrn Wiegand..."></textarea>
+            <button class="btn btn-success" onclick="sendToChef()">📬 An Herrn Wiegand senden</button>
+          </div>
         </div>
       </div>
-    </div>
 
-    <div class="card">
-      <h2>🎤 Sprachaufnahme</h2>
-      <div class="audio-section">
-        <button class="record-btn" id="recordBtn" onclick="toggleRecording()">🎤</button>
-        <p class="record-status" id="recordStatus">Drücken um aufzunehmen</p>
-        <div class="audio-preview" id="audioPreview">
-          <audio id="audioPlayer" controls></audio>
-          <p>✓ Aufnahme bereit</p>
+      <!-- ANGEBOT -->
+      <div class="page" id="page-angebot">
+        <div class="card">
+          <div class="card-title"><span class="icon">💶</span> Angebot erstellen</div>
+          <div class="grid-2">
+            <div class="field"><label>Kundenname</label><input type="text" id="ang-kunde" placeholder="Max Mustermann" /></div>
+            <div class="field"><label>Adresse des Objekts</label><input type="text" id="ang-adresse" placeholder="Musterstr. 5, 37269 Eschwege" /></div>
+          </div>
+          <div class="grid-3">
+            <div class="field"><label>Datum</label><input type="date" id="ang-datum" /></div>
+            <div class="field"><label>Angebotsnummer</label><input type="text" id="ang-nummer" placeholder="2024-001" /></div>
+            <div class="field"><label>Fläche (m²)</label><input type="number" id="ang-flaeche" placeholder="30" /></div>
+          </div>
+          <div class="grid-2">
+            <div class="field">
+              <label>Schadensart</label>
+              <select id="ang-schaden">
+                <option>Wasserschaden</option><option>Rohrbruch</option><option>Schimmelbefall</option><option>Leckage</option><option>Sonstiges</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Dringlichkeit</label>
+              <select id="ang-dringlichkeit"><option>Normal</option><option>Dringend</option><option>Notfall</option></select>
+            </div>
+          </div>
+          <div class="field"><label>Beschreibung der Arbeiten</label><textarea id="ang-beschreibung" placeholder="z.B. Wasserschadensanierung im Keller, ca. 30m², inkl. Trocknung, Estrich, Malerarbeiten..."></textarea></div>
+          <button class="btn btn-primary btn-full" onclick="createAngebot()">💶 Angebot generieren</button>
         </div>
-        <div class="transcript-box" id="transcriptBox">
-          <div class="transcript-label">Transkript</div>
-          <div id="transcriptText"></div>
+        <div class="loading" id="loading-angebot"><div class="spinner"></div><p>Angebot wird erstellt... <span>Bitte warten</span></p></div>
+        <div class="card result-box" id="result-angebot">
+          <div class="result-header">
+            <div class="result-title">✅ Angebot erstellt</div>
+            <div class="result-actions">
+              <button class="btn btn-secondary" onclick="copyEl('angebotContent')">📋 Kopieren</button>
+              <button class="btn btn-secondary" onclick="saveAngebot()">💾 Speichern</button>
+            </div>
+          </div>
+          <div class="result-content" id="angebotContent"></div>
         </div>
       </div>
-    </div>
 
-    <button class="btn-analyze" id="analyzeBtn" onclick="analyze()">KI-Analyse starten →</button>
-
-    <div class="loading" id="loading">
-      <div class="spinner"></div>
-      <p id="loadingText">KI analysiert... <span>Bitte warten</span></p>
-    </div>
-
-    <div class="result-card" id="resultCard">
-      <div class="result-header">
-        <h2>✓ Analyse abgeschlossen</h2>
-        <button class="btn-copy" onclick="copyResult()">Kopieren</button>
+      <!-- VERTRAG -->
+      <div class="page" id="page-vertrag">
+        <div class="card">
+          <div class="card-title"><span class="icon">📋</span> Vertrag / Auftragsbestätigung</div>
+          <div class="grid-2">
+            <div class="field"><label>Kundenname</label><input type="text" id="vtr-kunde" placeholder="Max Mustermann" /></div>
+            <div class="field"><label>Adresse Kunde</label><input type="text" id="vtr-adresse" placeholder="Musterstr. 5, 37269 Eschwege" /></div>
+          </div>
+          <div class="grid-2">
+            <div class="field"><label>Auftragsdatum</label><input type="date" id="vtr-datum" /></div>
+            <div class="field"><label>Gesamtbetrag (€)</label><input type="number" id="vtr-betrag" placeholder="3500" /></div>
+          </div>
+          <div class="field"><label>Leistungsbeschreibung</label><textarea id="vtr-leistung" placeholder="z.B. Wasserschadensanierung, Trocknung, Estricherneuerung, Malerarbeiten..."></textarea></div>
+          <div class="grid-2">
+            <div class="field"><label>Ausführungszeitraum</label><input type="text" id="vtr-zeitraum" placeholder="z.B. 14 Werktage" /></div>
+            <div class="field">
+              <label>Zahlungsbedingungen</label>
+              <select id="vtr-zahlung">
+                <option>50% Anzahlung, 50% nach Abschluss</option>
+                <option>Zahlung nach Abschluss</option>
+                <option>30 Tage netto</option>
+              </select>
+            </div>
+          </div>
+          <button class="btn btn-primary btn-full" onclick="createVertrag()">📋 Vertrag generieren</button>
+        </div>
+        <div class="loading" id="loading-vertrag"><div class="spinner"></div><p>Vertrag wird erstellt... <span>Bitte warten</span></p></div>
+        <div class="card result-box" id="result-vertrag">
+          <div class="result-header">
+            <div class="result-title">✅ Vertrag erstellt</div>
+            <div class="result-actions">
+              <button class="btn btn-secondary" onclick="copyEl('vertragContent')">📋 Kopieren</button>
+            </div>
+          </div>
+          <div class="result-content" id="vertragContent"></div>
+        </div>
       </div>
-      <div class="result-content" id="resultContent"></div>
-    </div>
 
-    <div class="footer">Gebäudetrocknung Wiegand · Forstgasse 19a · 37269 Eschwege · Internes Tool</div>
+      <!-- INBOX (Chef) -->
+      <div class="page" id="page-inbox">
+        <div class="card">
+          <div class="card-title"><span class="icon">📬</span> Posteingang – Analysen von Mitarbeitern</div>
+          <div id="inboxList"><div class="empty">📭 Noch keine Nachrichten</div></div>
+        </div>
+      </div>
+
+      <!-- VERLAUF -->
+      <div class="page" id="page-verlauf">
+        <div class="card">
+          <div class="card-title"><span class="icon">📂</span> Meine gespeicherten Analysen</div>
+          <div id="verlaufList"><div class="empty">Noch keine gespeicherten Analysen</div></div>
+        </div>
+      </div>
+
+    </div>
   </div>
 </div>
 
 <script>
-  const PASSWORD = "wiegand2024";
-  function doLogin() {
-    if (document.getElementById('loginInput').value === PASSWORD) {
-      document.getElementById('loginScreen').style.display = 'none';
-      document.getElementById('app').style.display = 'block';
-    } else {
-      document.getElementById('loginError').style.display = 'block';
-    }
+// ===== KI SYSTEM PROMPT =====
+const SYSTEM = `Du bist ein hochspezialisierter KI-Assistent der Firma Gebäudetrocknung Wiegand in Eschwege. Du hast tiefes Fachwissen über Gebäudetrocknung und Wasserschadensanierung.
+
+FACHWISSEN:
+- Wasserschadensanierung: Leckageortung, Schadensanalyse, Trocknungsplanung, Dokumentation
+- Trocknungstechnik: Kondensationstrockner (10-15L/h), Adsorptionstrockner, Infrarotheizung, Axialventilatoren
+- Feuchtemessung: CM-Messung (Calciumcarbid), elektrische Widerstandsmessung, Mikrowellenmessung
+- Trocknungszeiten: Zementestrich 4-8 Wochen, Anhydritestrich 2-4 Wochen, Mauerwerk 8-16 Wochen
+- Schimmelbehandlung: Befallsgrad 1-3, Biozide, HBCD-freie Dämmstoffe, Ursachenbeseitigung
+- Normen: DIN 1045, WTA-Merkblätter, VOB/B, DIN EN 13187
+
+MARKTPREISE DEUTSCHLAND 2024:
+- Leckageortung: 150-400€ pauschal
+- Trocknungsgeräte: 8-15€/Tag/Gerät
+- Technische Trocknung: 25-45€/m²/Woche
+- Feuchtemessung/Protokoll: 80-200€
+- Schimmelbeseitigung: 30-60€/m²
+- Estrich erneuern: 40-80€/m² (inkl. Material)
+- Fliesen entfernen: 15-25€/m²
+- Fliesen legen: 60-120€/m²
+- Putzarbeiten: 25-55€/m²
+- Malerarbeiten: 12-28€/m²
+- Dämmung: 20-50€/m²
+- Elektriker: 65-95€/Std
+- Entsorgung Bauschutt: 150-400€ pauschal
+- Trocknungsprotokoll: 100-250€
+
+FIRMA:
+- Gebäudetrocknung Wiegand, Forstgasse 19a, 37269 Eschwege
+- Tel: 01520 88 112 88, Mail: kontakt@gebaeudetrocknung-wiegand.de
+- Geschäftsführer: Werner Wiegand, Rayk Wiegand
+- Kooperationspartner: Versicherungen, Hausverwaltungen, Kommunen
+- USt-IdNr: DE[intern]
+
+Antworte immer professionell auf Deutsch. Nutze realistische Preise. Weise auf KfW/BAFA-Förderung hin wo sinnvoll.`;
+
+// ===== STATE =====
+let currentUser = null, imageBase64 = null, audioBlob = null;
+let mediaRecorder = null, audioChunks = [], isRecording = false;
+let activeModes = new Set(['analyse','konzept','kosten']);
+let history = JSON.parse(localStorage.getItem('wiegand_history') || '[]');
+let inbox = JSON.parse(localStorage.getItem('wiegand_inbox') || '[]');
+let stats = JSON.parse(localStorage.getItem('wiegand_stats') || '{"analysen":0,"angebote":0,"vertraege":0,"gesendet":0}');
+
+// ===== LOGIN =====
+let selectedProfile = null;
+function selectProfile(el, name, role, avatar, type) {
+  document.querySelectorAll('.profile-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedProfile = { name, role, avatar, type };
+}
+
+function doLogin() {
+  const pw = document.getElementById('loginInput').value;
+  if (!selectedProfile) { document.getElementById('loginError').style.display = 'block'; return; }
+  if (pw !== 'wiegand2024') { document.getElementById('loginError').style.display = 'block'; return; }
+  currentUser = selectedProfile;
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('sidebarAvatar').textContent = currentUser.avatar;
+  document.getElementById('sidebarName').textContent = currentUser.name;
+  document.getElementById('sidebarRole').textContent = currentUser.role;
+  document.getElementById('topbarDate').textContent = new Date().toLocaleDateString('de-DE', {weekday:'long', day:'numeric', month:'long'});
+  document.getElementById('ang-datum').value = new Date().toISOString().split('T')[0];
+  document.getElementById('vtr-datum').value = new Date().toISOString().split('T')[0];
+  if (currentUser.type === 'chef') {
+    document.getElementById('chef-nav').style.display = 'block';
+    updateInboxBadge();
   }
+  updateStats(); updateDashHistory();
+}
 
-  let imageBase64 = null;
-  function handleFile(input) {
-    const file = input.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      imageBase64 = e.target.result.split(',')[1];
-      document.getElementById('previewImgEl').src = e.target.result;
-      document.getElementById('fileName').textContent = '✓ ' + file.name;
-      document.getElementById('previewImg').style.display = 'block';
-    };
-    reader.readAsDataURL(file);
-  }
+function doLogout() {
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+  currentUser = null; selectedProfile = null;
+  document.querySelectorAll('.profile-btn').forEach(b => b.classList.remove('selected'));
+  document.getElementById('loginInput').value = '';
+  document.getElementById('loginError').style.display = 'none';
+}
 
-  let mediaRecorder = null, audioChunks = [], audioBlob = null, isRecording = false;
-  async function toggleRecording() {
-    if (!isRecording) {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        mediaRecorder = new MediaRecorder(stream);
-        audioChunks = [];
-        mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data);
-        mediaRecorder.onstop = () => {
-          audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-          document.getElementById('audioPlayer').src = URL.createObjectURL(audioBlob);
-          document.getElementById('audioPreview').style.display = 'block';
-          stream.getTracks().forEach(t => t.stop());
-        };
-        mediaRecorder.start();
-        isRecording = true;
-        document.getElementById('recordBtn').textContent = '⏹';
-        document.getElementById('recordBtn').classList.add('recording');
-        document.getElementById('recordStatus').textContent = '● Aufnahme läuft...';
-        document.getElementById('recordStatus').classList.add('active');
-      } catch (err) { showError('Mikrofon-Zugriff verweigert.'); }
-    } else {
-      mediaRecorder.stop();
-      isRecording = false;
-      document.getElementById('recordBtn').textContent = '🎤';
-      document.getElementById('recordBtn').classList.remove('recording');
-      document.getElementById('recordStatus').textContent = '✓ Aufnahme gespeichert';
-      document.getElementById('recordStatus').classList.remove('active');
-    }
-  }
+// ===== NAVIGATION =====
+function showPage(name, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  if (el) el.classList.add('active');
+  const titles = { dashboard:'Dashboard', analyse:'KI-Analyse', angebot:'Angebot erstellen', vertrag:'Vertrag erstellen', inbox:'Posteingang', verlauf:'Meine Analysen' };
+  document.getElementById('pageTitle').textContent = titles[name] || name;
+  if (name === 'inbox') loadInbox();
+  if (name === 'verlauf') loadVerlauf();
+  if (name === 'dashboard') { updateStats(); updateDashHistory(); }
+}
 
-  async function analyze() {
-    const apiKey = document.getElementById('apiKey').value.trim();
-    const objekt = document.getElementById('objekt').value.trim();
-    const schadensart = document.getElementById('schadensart').value.trim();
-    document.getElementById('errorBox').className = 'error-box';
-    if (!apiKey) { showError('Bitte OpenAI API Key eingeben.'); return; }
-    if (!imageBase64 && !audioBlob) { showError('Bitte Foto hochladen oder Sprachaufnahme machen.'); return; }
+// ===== FOTO =====
+function handleFile(input) {
+  const file = input.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    imageBase64 = e.target.result.split(',')[1];
+    document.getElementById('previewImg').src = e.target.result;
+    document.getElementById('fileName').textContent = '✓ ' + file.name;
+    document.getElementById('previewWrap').style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
 
-    const btn = document.getElementById('analyzeBtn');
-    btn.disabled = true;
-    document.getElementById('loading').className = 'loading active';
-    document.getElementById('resultCard').className = 'result-card';
-
-    let transcript = '';
-    if (audioBlob) {
-      document.getElementById('loadingText').innerHTML = 'Sprache wird transkribiert... <span>Bitte warten</span>';
-      try {
-        const formData = new FormData();
-        formData.append('file', audioBlob, 'aufnahme.webm');
-        formData.append('model', 'whisper-1');
-        formData.append('language', 'de');
-        const res = await fetch('https://api.openai.com/v1/audio/transcriptions', {
-          method: 'POST', headers: { 'Authorization': `Bearer ${apiKey}` }, body: formData
-        });
-        const data = await res.json();
-        if (data.text) {
-          transcript = data.text;
-          document.getElementById('transcriptText').textContent = transcript;
-          document.getElementById('transcriptBox').className = 'transcript-box active';
-        }
-      } catch (err) { showError('Fehler bei Transkription: ' + err.message); btn.disabled = false; return; }
-    }
-
-    document.getElementById('loadingText').innerHTML = 'KI analysiert den Schaden... <span>Bitte warten</span>';
-    const prompt = `Du bist ein erfahrener Bausachverständiger für die Firma Gebäudetrocknung Wiegand in Eschwege. Erstelle eine vollständige Sanierungsanalyse auf Deutsch.
-
-Objekt: ${objekt || 'Nicht angegeben'}
-Schadensart: ${schadensart || 'Nicht angegeben'}
-${transcript ? `Sprachbeschreibung: "${transcript}"` : ''}
-${imageBase64 ? 'Analysiere das beigefügte Foto.' : ''}
-
-### 1. SCHADENSBEURTEILUNG
-Zustand, Schweregrad und Dringlichkeit.
-
-### 2. EMPFOHLENE MAßNAHMEN
-Alle nötigen Maßnahmen – priorisiert.
-
-### 3. SANIERUNGSKONZEPT
-Schritt-für-Schritt Vorgehen.
-
-### 4. KOSTENSCHÄTZUNG
-- Trocknung & Technik: X€
-- Rückbau: X€
-- Material: X€
-- Handwerkerleistungen: X€
-- Nebenkosten: X€
-
-### 5. GESAMTKOSTEN
-Schätzung gesamt: X€ – X€
-
-### 6. FÖRDERMÖGLICHKEITEN
-KfW, BAFA, Versicherung
-
-### 7. BENÖTIGTE GEWERKE
-Welche Fachbetriebe werden zusätzlich benötigt?`;
-
+// ===== AUDIO =====
+async function toggleRecording() {
+  if (!isRecording) {
     try {
-      let content = [];
-      if (imageBase64) content.push({ type: 'image_url', image_url: { url: `data:image/jpeg;base64,${imageBase64}` } });
-      content.push({ type: 'text', text: prompt });
-      const res = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
-        body: JSON.stringify({ model: 'gpt-4o', max_tokens: 2000, messages: [{ role: 'user', content }] })
-      });
-      const data = await res.json();
-      if (!res.ok) { showError('API Fehler: ' + (data.error?.message || res.status)); return; }
-      const text = data.choices[0].message.content;
-      document.getElementById('resultContent').innerHTML = text.replace(/### (.+)/g, '<h3>$1</h3>').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-      document.getElementById('resultCard').className = 'result-card active';
-      document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth' });
-    } catch (err) { showError('Verbindungsfehler: ' + err.message); }
-    finally { btn.disabled = false; document.getElementById('loading').className = 'loading'; }
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaRecorder = new MediaRecorder(stream);
+      audioChunks = [];
+      mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+      mediaRecorder.onstop = () => {
+        audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+        document.getElementById('audioPlayer').src = URL.createObjectURL(audioBlob);
+        document.getElementById('audioPreview').style.display = 'block';
+        stream.getTracks().forEach(t => t.stop());
+      };
+      mediaRecorder.start(); isRecording = true;
+      document.getElementById('recordBtn').textContent = '⏹';
+      document.getElementById('recordBtn').classList.add('recording');
+      document.getElementById('recordStatus').textContent = '● Aufnahme läuft...';
+      document.getElementById('recordStatus').classList.add('active');
+    } catch { showError('Mikrofon-Zugriff verweigert.'); }
+  } else {
+    mediaRecorder.stop(); isRecording = false;
+    document.getElementById('recordBtn').textContent = '🎤';
+    document.getElementById('recordBtn').classList.remove('recording');
+    document.getElementById('recordStatus').textContent = '✓ Aufnahme gespeichert';
+    document.getElementById('recordStatus').classList.remove('active');
   }
+}
 
-  function showError(msg) {
-    const el = document.getElementById('errorBox');
-    el.textContent = msg; el.className = 'error-box active';
-    document.getElementById('loading').className = 'loading';
-    document.getElementById('analyzeBtn').disabled = false;
-  }
+// ===== MODES =====
+function toggleMode(m) {
+  const el = document.getElementById('m-' + m);
+  if (activeModes.has(m)) { activeModes.delete(m); el.classList.remove('on'); }
+  else { activeModes.add(m); el.classList.add('on'); }
+}
 
-  function copyResult() {
-    navigator.clipboard.writeText(document.getElementById('resultContent').innerText).then(() => {
-      const btn = document.querySelector('.btn-copy');
-      btn.textContent = '✓ Kopiert!';
-      setTimeout(() => btn.textContent = 'Kopieren', 2000);
+// ===== API CALL =====
+async function callGPT(messages, loadingId, btnId) {
+  const key = document.getElementById('apiKey').value.trim();
+  if (!key) { showError('Bitte OpenAI API Key eingeben.'); return null; }
+  document.getElementById(loadingId).classList.add('on');
+  if (btnId) document.getElementById(btnId).disabled = true;
+  try {
+    const res = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
+      body: JSON.stringify({ model: 'gpt-4o', max_tokens: 2500, messages })
     });
+    const data = await res.json();
+    if (!res.ok) { showError('API Fehler: ' + (data.error?.message || res.status)); return null; }
+    return data.choices[0].message.content;
+  } catch (e) { showError('Verbindungsfehler: ' + e.message); return null; }
+  finally {
+    document.getElementById(loadingId).classList.remove('on');
+    if (btnId) document.getElementById(btnId).disabled = false;
   }
+}
+
+// ===== ANALYSE =====
+async function runAnalyse() {
+  document.getElementById('errorBar').className = 'error-bar';
+  const key = document.getElementById('apiKey').value.trim();
+  if (!key) { showError('Bitte OpenAI API Key eingeben.'); return; }
+  if (!imageBase64 && !audioBlob) { showError('Bitte Foto hochladen oder Sprachaufnahme machen.'); return; }
+
+  document.getElementById('analyzeBtn').disabled = true;
+  document.getElementById('loading-analyse').classList.add('on');
+  document.getElementById('result-analyse').classList.remove('on');
+
+  let transcript = '';
+  if (audioBlob) {
+    document.getElementById('loadingText').innerHTML = 'Sprache wird transkribiert... <span>Bitte warten</span>';
+    try {
+      const fd = new FormData();
+      fd.append('file', audioBlob, 'aufnahme.webm');
+      fd.append('model', 'whisper-1'); fd.append('language', 'de');
+      const r = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+        method: 'POST', headers: { 'Authorization': `Bearer ${key}` }, body: fd
+      });
+      const d = await r.json();
+      if (d.text) {
+        transcript = d.text;
+        document.getElementById('transcriptText').textContent = transcript;
+        document.getElementById('transcriptBox').classList.add('active');
+      }
+    } catch (e) { showError('Transkription fehlgeschlagen.'); document.getElementById('analyzeBtn').disabled = false; document.getElementById('loading-analyse').classList.remove('on'); return; }
+  }
+
+  document.getElementById('loadingText').innerHTML = 'KI analysiert den Schaden... <span>Bitte warten</span>';
+
+  const objekt = document.getElementById('objekt').value;
+  const auftraggeber = document.getElementById('auftraggeber').value;
+  const schaden = document.getElementById('schadensart').value;
+  const flaeche = document.getElementById('flaeche').value;
+  const vers = document.getElementById('versicherung').value;
+
+  const parts = [];
+  if (activeModes.has('analyse')) parts.push(`### SCHADENSBEURTEILUNG\nBewerte den Zustand (Wände, Böden, Decken, Fenster, Sanitär). Schweregrad (leicht/mittel/schwer) und Dringlichkeit.`);
+  if (activeModes.has('konzept')) parts.push(`### SANIERUNGSKONZEPT\nEmpfohlene Maßnahmen in Schritt-für-Schritt Reihenfolge. Welche Gewerke werden benötigt?`);
+  if (activeModes.has('kosten')) parts.push(`### KOSTENSCHÄTZUNG\nEinzelposten:\n- Leckageortung/Erstanalyse: X€\n- Technische Trocknung: X€\n- Rückbau/Entsorgung: X€\n- Material: X€\n- Handwerkerleistungen: X€\n- Nebenkosten: X€\n\n**Gesamtkosten: X€ – X€**`);
+  if (activeModes.has('foerder')) parts.push(`### FÖRDERMÖGLICHKEITEN\nKfW, BAFA, Versicherungsleistungen, sonstige Förderungen.`);
+
+  const prompt = `Objekt: ${objekt||'Nicht angegeben'}\nAuftraggeber: ${auftraggeber||'Nicht angegeben'}\nSchadensart: ${schaden||'Nicht angegeben'}\nFläche: ${flaeche||'Unbekannt'} m²\nVersicherungsfall: ${vers}\n${transcript ? `\nSprachbeschreibung des Technikers:\n"${transcript}"` : ''}\n${imageBase64 ? '\nAnalysiere das beigefügte Foto des Schadens.' : ''}\n\nErstelle folgende Analyse auf Deutsch:\n\n${parts.join('\n\n')}`;
+
+  const content = [];
+  if (imageBase64) content.push({ type: 'image_url', image_url: { url: `data:image/jpeg;base64,${imageBase64}` } });
+  content.push({ type: 'text', text: prompt });
+
+  try {
+    const res = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
+      body: JSON.stringify({ model: 'gpt-4o', max_tokens: 2500, messages: [{ role:'system', content: SYSTEM }, { role:'user', content }] })
+    });
+    const data = await res.json();
+    if (!res.ok) { showError('API Fehler: ' + (data.error?.message || res.status)); return; }
+    const text = data.choices[0].message.content;
+    document.getElementById('analyseContent').innerHTML = formatResult(text);
+    document.getElementById('result-analyse').classList.add('on');
+    document.getElementById('result-analyse').scrollIntoView({ behavior: 'smooth' });
+    stats.analysen++; saveStats();
+  } catch (e) { showError('Fehler: ' + e.message); }
+  finally { document.getElementById('analyzeBtn').disabled = false; document.getElementById('loading-analyse').classList.remove('on'); }
+}
+
+// ===== ANGEBOT =====
+async function createAngebot() {
+  document.getElementById('errorBar').className = 'error-bar';
+  const kunde = document.getElementById('ang-kunde').value;
+  const adresse = document.getElementById('ang-adresse').value;
+  const datum = document.getElementById('ang-datum').value;
+  const nummer = document.getElementById('ang-nummer').value || 'AG-' + Date.now().toString().slice(-6);
+  const flaeche = document.getElementById('ang-flaeche').value;
+  const schaden = document.getElementById('ang-schaden').value;
+  const dring = document.getElementById('ang-dringlichkeit').value;
+  const beschr = document.getElementById('ang-beschreibung').value;
+
+  const prompt = `Erstelle ein professionelles Angebot für die Firma Gebäudetrocknung Wiegand.
+
+Angebotsnummer: ${nummer}
+Datum: ${datum}
+Kunde: ${kunde||'[Kundenname]'}
+Adresse: ${adresse||'[Adresse]'}
+Schadensart: ${schaden}
+Fläche: ${flaeche||'?'} m²
+Dringlichkeit: ${dring}
+Beschreibung: ${beschr||'Sanierungsarbeiten'}
+
+Erstelle ein vollständiges, professionelles Angebot mit:
+1. Kopfzeile (Firmenangaben + Kundendaten)
+2. Angebotspositionen mit Einzelpreisen (realistisch in €)
+3. Zwischensumme, MwSt (19%), Gesamtbetrag
+4. Zahlungsbedingungen
+5. Gültigkeitsdauer (30 Tage)
+6. Unterschriftszeile
+
+Nutze die echten Firmendaten von Gebäudetrocknung Wiegand.`;
+
+  const key = document.getElementById('apiKey').value.trim();
+  if (!key) { showError('Bitte OpenAI API Key eingeben.'); return; }
+  document.getElementById('loading-angebot').classList.add('on');
+  document.getElementById('result-angebot').classList.remove('on');
+
+  try {
+    const res = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
+      body: JSON.stringify({ model: 'gpt-4o', max_tokens: 2000, messages: [{ role:'system', content: SYSTEM }, { role:'user', content: prompt }] })
+    });
+    const data = await res.json();
+    if (!res.ok) { showError('API Fehler: ' + (data.error?.message || res.status)); return; }
+    document.getElementById('angebotContent').innerHTML = formatResult(data.choices[0].message.content);
+    document.getElementById('result-angebot').classList.add('on');
+    document.getElementById('result-angebot').scrollIntoView({ behavior: 'smooth' });
+    stats.angebote++; saveStats();
+  } catch (e) { showError('Fehler: ' + e.message); }
+  finally { document.getElementById('loading-angebot').classList.remove('on'); }
+}
+
+// ===== VERTRAG =====
+async function createVertrag() {
+  document.getElementById('errorBar').className = 'error-bar';
+  const kunde = document.getElementById('vtr-kunde').value;
+  const adresse = document.getElementById('vtr-adresse').value;
+  const datum = document.getElementById('vtr-datum').value;
+  const betrag = document.getElementById('vtr-betrag').value;
+  const leistung = document.getElementById('vtr-leistung').value;
+  const zeitraum = document.getElementById('vtr-zeitraum').value;
+  const zahlung = document.getElementById('vtr-zahlung').value;
+
+  const prompt = `Erstelle einen professionellen Werkvertrag / Auftragsbestätigung für die Firma Gebäudetrocknung Wiegand.
+
+Auftragnehmer: Gebäudetrocknung Wiegand, Forstgasse 19a, 37269 Eschwege
+Auftraggeber: ${kunde||'[Kundenname]'}, ${adresse||'[Adresse]'}
+Datum: ${datum}
+Gesamtbetrag: ${betrag||'[Betrag]'}€ inkl. MwSt.
+Leistung: ${leistung||'Sanierungsarbeiten'}
+Ausführungszeitraum: ${zeitraum||'Nach Absprache'}
+Zahlungsbedingungen: ${zahlung}
+
+Erstelle einen vollständigen Vertrag mit:
+1. Vertragsparteien
+2. Leistungsbeschreibung
+3. Vergütung und Zahlungsbedingungen
+4. Ausführungszeitraum
+5. Gewährleistung (2 Jahre nach BGB)
+6. Haftung
+7. Kündigung
+8. Unterschriften beider Parteien mit Datum
+
+Professionell und rechtssicher formuliert nach deutschem Recht.`;
+
+  const key = document.getElementById('apiKey').value.trim();
+  if (!key) { showError('Bitte OpenAI API Key eingeben.'); return; }
+  document.getElementById('loading-vertrag').classList.add('on');
+  document.getElementById('result-vertrag').classList.remove('on');
+
+  try {
+    const res = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
+      body: JSON.stringify({ model: 'gpt-4o', max_tokens: 2000, messages: [{ role:'system', content: SYSTEM }, { role:'user', content: prompt }] })
+    });
+    const data = await res.json();
+    if (!res.ok) { showError('API Fehler: ' + (data.error?.message || res.status)); return; }
+    document.getElementById('vertragContent').innerHTML = formatResult(data.choices[0].message.content);
+    document.getElementById('result-vertrag').classList.add('on');
+    document.getElementById('result-vertrag').scrollIntoView({ behavior: 'smooth' });
+    stats.vertraege++; saveStats();
+  } catch (e) { showError('Fehler: ' + e.message); }
+  finally { document.getElementById('loading-vertrag').classList.remove('on'); }
+}
+
+// ===== AN CHEF SENDEN =====
+function sendToChef() {
+  const analyse = document.getElementById('analyseContent').innerText;
+  const note = document.getElementById('chefNote').value;
+  const item = {
+    von: currentUser.name,
+    avatar: currentUser.avatar,
+    zeit: new Date().toLocaleString('de-DE'),
+    analyse,
+    note,
+    objekt: document.getElementById('objekt').value || 'Unbekanntes Objekt'
+  };
+  inbox.unshift(item);
+  localStorage.setItem('wiegand_inbox', JSON.stringify(inbox));
+  stats.gesendet++; saveStats();
+  document.getElementById('sendChefBox').innerHTML = '<div style="text-align:center;padding:20px;color:var(--green);font-weight:600">✅ Erfolgreich an Herrn Wiegand gesendet!</div>';
+  updateInboxBadge();
+}
+
+// ===== INBOX =====
+function loadInbox() {
+  const list = document.getElementById('inboxList');
+  if (!inbox.length) { list.innerHTML = '<div class="empty">📭 Noch keine Nachrichten</div>'; return; }
+  list.innerHTML = inbox.map((item, i) => `
+    <div class="inbox-item">
+      <div class="inbox-header">
+        <div class="inbox-from">${item.avatar} ${item.von}</div>
+        <div class="inbox-time">${item.zeit}</div>
+      </div>
+      <div style="font-size:12px;font-weight:600;color:var(--gray-600);margin-bottom:6px">📍 ${item.objekt}</div>
+      ${item.note ? `<div class="inbox-note">"${item.note}"</div>` : ''}
+      <div class="inbox-content">${item.analyse}</div>
+      <button class="btn btn-secondary" style="margin-top:8px;font-size:11px" onclick="deleteInbox(${i})">🗑️ Löschen</button>
+    </div>
+  `).join('');
+}
+
+function deleteInbox(i) { inbox.splice(i, 1); localStorage.setItem('wiegand_inbox', JSON.stringify(inbox)); loadInbox(); updateInboxBadge(); }
+function updateInboxBadge() {
+  const badge = document.getElementById('inboxBadge');
+  if (inbox.length > 0) { badge.style.display = 'inline'; badge.textContent = inbox.length; }
+  else { badge.style.display = 'none'; }
+}
+
+// ===== VERLAUF =====
+function saveAnalyse() {
+  const item = { typ: 'Analyse', objekt: document.getElementById('objekt').value || 'Unbekannt', zeit: new Date().toLocaleString('de-DE'), inhalt: document.getElementById('analyseContent').innerText };
+  history.unshift(item); if (history.length > 20) history.pop();
+  localStorage.setItem('wiegand_history', JSON.stringify(history));
+  alert('✅ Analyse gespeichert!');
+}
+function saveAngebot() {
+  const item = { typ: 'Angebot', objekt: document.getElementById('ang-kunde').value || 'Unbekannt', zeit: new Date().toLocaleString('de-DE'), inhalt: document.getElementById('angebotContent').innerText };
+  history.unshift(item); if (history.length > 20) history.pop();
+  localStorage.setItem('wiegand_history', JSON.stringify(history));
+  stats.angebote++; saveStats(); alert('✅ Angebot gespeichert!');
+}
+function loadVerlauf() {
+  const list = document.getElementById('verlaufList');
+  if (!history.length) { list.innerHTML = '<div class="empty">Noch keine gespeicherten Analysen</div>'; return; }
+  list.innerHTML = history.map(item => `
+    <div class="history-item">
+      <div class="history-icon">${item.typ === 'Analyse' ? '🔍' : item.typ === 'Angebot' ? '💶' : '📋'}</div>
+      <div class="history-info"><h4>${item.objekt}</h4><p>${item.typ} · ${item.zeit}</p></div>
+    </div>
+  `).join('');
+}
+
+// ===== STATS =====
+function saveStats() { localStorage.setItem('wiegand_stats', JSON.stringify(stats)); updateStats(); }
+function updateStats() {
+  document.getElementById('stat-analysen').textContent = stats.analysen;
+  document.getElementById('stat-angebote').textContent = stats.angebote;
+  document.getElementById('stat-vertraege').textContent = stats.vertraege;
+  document.getElementById('stat-gesendet').textContent = stats.gesendet;
+}
+function updateDashHistory() {
+  const el = document.getElementById('dashHistory');
+  if (!history.length) { el.innerHTML = '<div class="empty">Noch keine Aktivitäten</div>'; return; }
+  el.innerHTML = history.slice(0,5).map(item => `
+    <div class="history-item">
+      <div class="history-icon">${item.typ === 'Analyse' ? '🔍' : '💶'}</div>
+      <div class="history-info"><h4>${item.objekt}</h4><p>${item.typ} · ${item.zeit}</p></div>
+    </div>
+  `).join('');
+}
+
+// ===== HELPERS =====
+function formatResult(text) {
+  return text.replace(/### (.+)/g, '<h3>$1</h3>').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+}
+function copyEl(id) {
+  navigator.clipboard.writeText(document.getElementById(id).innerText).then(() => alert('✅ In Zwischenablage kopiert!'));
+}
+function showError(msg) {
+  const el = document.getElementById('errorBar');
+  el.textContent = '❌ ' + msg; el.className = 'error-bar on';
+  setTimeout(() => el.className = 'error-bar', 5000);
+}
 </script>
 </body>
 </html>
