@@ -1,61 +1,129 @@
-<!DOCTYPE html>
-<html lang="de">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KI Sanierungskonzept 3D</title>
-    <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
-    <style>
-        body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; }
-        #viewer-container { width: 100%; max-width: 800px; height: 500px; background: #eee; border-radius: 15px; overflow: hidden; margin-top: 20px; }
-        model-viewer { width: 100%; height: 100%; }
-        .controls { background: #f9f9f9; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        button { padding: 10px 20px; font-size: 16px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 5px; }
-        button:disabled { background: #ccc; }
-        #status { margin-top: 10px; font-weight: bold; color: #555; }
-    </style>
-</head>
-<body>
+<div class="api-wrap" style="margin-left:12px">
+  <label>🔑 3DAI Studio Key</label>
+  <input type="password" id="studioKey" placeholder="3dai-..." />
+</div>
 
-    <h1>Wiegand 3D Sanierungs-Demo</h1>
+<div class="viz-section">
+  <div class="viz-hdr">
+    <div>
+      <div class="viz-title">🎨 3D Sanierungskonzept & Visualisierung</div>
+      <div class="viz-sub">OpenAI plant die Sanierung – Rodin AI (3DAI Studio) baut das interaktive 3D-Modell</div>
+    </div>
+    <button class="btn btn-p" id="vizBtn" onclick="generate3DConcept()">✨ 3D Modell generieren</button>
+  </div>
+
+  <div class="loading-konzepte" id="ldViz">
+    <div class="spinner"></div>
+    <p id="vizStatus">KI plant Sanierung... <span>Bitte warten</span></p>
+  </div>
+
+  <div id="vizResult" style="display:none; text-align:center;">
+    <div class="vorher-box" id="vorherBox" style="margin-bottom: 20px;"></div>
     
-    <div class="controls">
-        <input type="text" id="imageUrl" placeholder="Bild-URL hier einfügen (z.B. von deinem Schimmelbild)" style="width: 300px; padding: 10px;">
-        <button id="startBtn" onclick="runSanierung()">3D Konzept erstellen</button>
-        <p id="status">Bereit. Bitte Bild-URL eingeben.</p>
+    <div style="background:white; border-radius:var(--r); padding:15px; box-shadow:var(--shadow-md);">
+      <p style="font-weight:700; color:var(--blue); margin-bottom:10px;">Interaktives 3D-Sanierungskonzept (Rodin v2)</p>
+      <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+      <model-viewer id="rodinViewer" src="" ar camera-controls shadow-intensity="1" style="width:100%; height:400px; background:#f9fafb;"></model-viewer>
+      <p style="font-size:10px; color:var(--gray-400); margin-top:8px;">Modell generiert durch 3DAI Studio API · Rodin Architectural Engine</p>
     </div>
+  </div>
+</div>
 
-    <div id="viewer-container">
-        <model-viewer id="sanierungsViewer" src="" ar camera-controls shadow-intensity="1"></model-viewer>
-    </div>
+<script>
+// Fügen Sie diese Funktion am Ende Ihres <script> Bereichs hinzu
 
-    <script>
-        // ACHTUNG: Diese Keys sind öffentlich sichtbar!
-        const OPENAI_API_KEY = "DEIN_OPENAI_KEY";
-        const STUDIO_3DAI_KEY = "DEIN_STUDIO_3DAI_KEY";
+async function generate3DConcept() {
+  const openaiKey = document.getElementById('apiKey').value.trim();
+  const studioKey = document.getElementById('studioKey').value.trim();
+  
+  if (!openaiKey || !studioKey) {
+    showErr('Bitte OpenAI Key UND 3DAI Studio Key eingeben.');
+    return;
+  }
+  if (!photos.length) {
+    showErr('Bitte zuerst ein Schadensfoto hochladen.');
+    return;
+  }
 
-        async function runSanierung() {
-            const imgUrl = document.getElementById('imageUrl').value;
-            const status = document.getElementById('status');
-            const btn = document.getElementById('startBtn');
-            const viewer = document.getElementById('sanierungsViewer');
+  const btn = document.getElementById('vizBtn');
+  const ld = document.getElementById('ldViz');
+  const resDiv = document.getElementById('vizResult');
+  const statusTxt = document.getElementById('vizStatus');
 
-            if (!imgUrl) return alert("Bitte eine Bild-URL eingeben!");
+  btn.disabled = true;
+  ld.classList.add('on');
+  resDiv.style.display = 'none';
 
-            btn.disabled = true;
-            
-            try {
-                // SCHRITT 1: OpenAI analysiert das Bild und schreibt den Rodin-Prompt
-                status.innerText = "OpenAI analysiert den Schaden...";
-                const aiRes = await fetch('https://api.openai.com/v1/chat/completions', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${OPENAI_API_KEY}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        model: "gpt-4o",
-                        messages: [{
-                            role: "user",
-                            content: [
-                                { type: "text", text: "Analyze this building damage and create a high-quality
+  try {
+    // SCHRITT 1: OpenAI erstellt den Sanierungs-Prompt für Rodin
+    statusTxt.innerHTML = "OpenAI erstellt Sanierungsplan... <span>(Architektur-Analyse)</span>";
+    
+    const aiRes = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${openaiKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: "gpt-4o",
+        messages: [{
+          role: "user",
+          content: [
+            { type: "text", text: "Analysiere den Schaden auf diesem Bild und erstelle einen englischen Prompt für eine 3D-KI (Rodin). Der Prompt soll eine perfekt sanierte Version dieser Wand/dieses Raums beschreiben: 'Professional architectural 3D model, clean white plaster walls, modern bright interior, photorealistic 4k textures, no damage'. Gib NUR den englischen Prompt zurück." },
+            { type: "image_url", image_url: { url: 'data:image/jpeg;base64,' + photos[0].b64 } }
+          ]
+        }]
+      })
+    });
+    
+    const aiData = await aiRes.json();
+    const rodinPrompt = aiData.choices[0].message.content;
+
+    // SCHRITT 2: 3DAI Studio Task starten
+    statusTxt.innerHTML = "Rodin AI baut 3D-Modell... <span>(Dauer ca. 60s)</span>";
+    
+    const studioRes = await fetch('https://api.3daistudio.com/v1/generate', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${studioKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        engine: "rodin-v2",
+        prompt: rodinPrompt,
+        quality: "high"
+      })
+    });
+    
+    const studioData = await studioRes.json();
+    const taskId = studioData.id;
+
+    // SCHRITT 3: Polling (Warten bis fertig)
+    const poll = setInterval(async () => {
+      const check = await fetch(`https://api.3daistudio.com/v1/status/${taskId}`, {
+        headers: { 'Authorization': `Bearer ${studioKey}` }
+      });
+      const pollData = await check.json();
+
+      if (pollData.status === 'completed') {
+        clearInterval(poll);
+        
+        // Vorher-Bild anzeigen
+        document.getElementById('vorherBox').innerHTML = `
+          <img src="${photos[0].full}" style="max-height:150px; border:2px solid var(--red); border-radius:8px;" />
+          <div style="color:var(--red); font-size:10px; font-weight:700; margin-top:5px;">📷 IST-ZUSTAND (SCHADEN)</div>
+        `;
+        
+        document.getElementById('rodinViewer').src = pollData.model_url;
+        resDiv.style.display = 'block';
+        ld.classList.remove('on');
+        btn.disabled = false;
+      } else if (pollData.status === 'failed') {
+        clearInterval(poll);
+        showErr('3D-Generierung fehlgeschlagen.');
+        ld.classList.remove('on');
+        btn.disabled = false;
+      }
+    }, 5000);
+
+  } catch (e) {
+    showErr('Fehler: ' + e.message);
+    ld.classList.remove('on');
+    btn.disabled = false;
+  }
+}
+</script>
