@@ -1,452 +1,61 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Bad-Video → Analyse → 3D (Demo)</title>
-  <style>
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; margin: 16px; }
-    .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
-    .card { border: 1px solid #ddd; border-radius: 12px; padding: 12px; }
-    #three { width: 100%; height: 560px; border: 1px solid #ddd; border-radius: 12px; overflow: hidden; }
-    input[type="password"], input[type="text"] { padding: 8px; border-radius: 10px; border: 1px solid #ccc; width: 320px; }
-    button { padding: 10px 12px; border: 1px solid #ccc; border-radius: 10px; background: #fff; cursor: pointer; }
-    button:disabled { opacity: .6; cursor: not-allowed; }
-    small { color: #666; }
-    pre { white-space: pre-wrap; word-break: break-word; background: #fafafa; padding: 12px; border-radius: 12px; border: 1px solid #eee; max-height: 340px; overflow: auto; }
-    .ok { color: #0a7; }
-    .err { color: #c00; }
-    .hint { color:#555; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KI Sanierungskonzept 3D</title>
+    <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+    <style>
+        body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        #viewer-container { width: 100%; max-width: 800px; height: 500px; background: #eee; border-radius: 15px; overflow: hidden; margin-top: 20px; }
+        model-viewer { width: 100%; height: 100%; }
+        .controls { background: #f9f9f9; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        button { padding: 10px 20px; font-size: 16px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 5px; }
+        button:disabled { background: #ccc; }
+        #status { margin-top: 10px; font-weight: bold; color: #555; }
+    </style>
 </head>
 <body>
-  <h2>Bad-Video → Analyse → 3D (einfaches Demo in 1 Datei)</h2>
 
-  <div class="card">
-    <div class="row">
-      <label>
-        <div><b>OpenAI API Key</b> <small>(nur Demo: Key ist im Browser sichtbar)</small></div>
-        <input id="apiKey" type="password" placeholder="sk-..." />
-      </label>
-
-      <label>
-        <div><b>Model</b></div>
-        <input id="model" type="text" value="gpt-4.1-mini" />
-      </label>
-
-      <label>
-        <div><b>Frames</b> <small>(6–10 empfohlen)</small></div>
-        <input id="frames" type="text" value="6" style="width:100px" />
-      </label>
-
-      <label>
-        <div><b>Video</b></div>
-        <input id="videoFile" type="file" accept="video/*" />
-      </label>
-
-      <button id="runBtn">Video analysieren & 3D anzeigen</button>
+    <h1>Wiegand 3D Sanierungs-Demo</h1>
+    
+    <div class="controls">
+        <input type="text" id="imageUrl" placeholder="Bild-URL hier einfügen (z.B. von deinem Schimmelbild)" style="width: 300px; padding: 10px;">
+        <button id="startBtn" onclick="runSanierung()">3D Konzept erstellen</button>
+        <p id="status">Bereit. Bitte Bild-URL eingeben.</p>
     </div>
 
-    <p class="hint">
-      Ablauf: Video wird im Browser geladen → Frames werden als Bilder extrahiert → an OpenAI gesendet → JSON-Layout kommt zurück →
-      einfache 3D-Boxen (Raum + WC/Waschbecken/Dusche usw.).
-    </p>
-
-    <div id="status"></div>
-  </div>
-
-  <div style="height:12px"></div>
-
-  <div id="three"></div>
-
-  <div style="height:12px"></div>
-
-  <div class="card">
-    <b>Ergebnis JSON</b>
-    <pre id="jsonOut">{}</pre>
-  </div>
-
-  <!-- Three.js (CDN) -->
-  <script type="module">
-    import * as THREE from "https://unpkg.com/three@0.165.0/build/three.module.js";
-    import { OrbitControls } from "https://unpkg.com/three@0.165.0/examples/jsm/controls/OrbitControls.js";
-
-    // ---------- UI ----------
-    const apiKeyEl = document.getElementById("apiKey");
-    const modelEl = document.getElementById("model");
-    const framesEl = document.getElementById("frames");
-    const fileEl = document.getElementById("videoFile");
-    const runBtn = document.getElementById("runBtn");
-    const statusEl = document.getElementById("status");
-    const jsonOut = document.getElementById("jsonOut");
-    const mount = document.getElementById("three");
-
-    // Persist key in session (optional)
-    apiKeyEl.value = sessionStorage.getItem("OPENAI_API_KEY") || "";
-    apiKeyEl.addEventListener("input", () => sessionStorage.setItem("OPENAI_API_KEY", apiKeyEl.value.trim()));
-
-    function setStatus(msg, kind="") {
-      statusEl.className = kind;
-      statusEl.textContent = msg;
-    }
-
-    // ---------- Three.js Scene ----------
-    let renderer, scene, camera, controls;
-    initThree();
-
-    function initThree() {
-      scene = new THREE.Scene();
-      scene.background = new THREE.Color(0xffffff);
-
-      const w = mount.clientWidth;
-      const h = mount.clientHeight;
-
-      camera = new THREE.PerspectiveCamera(45, w / h, 0.01, 200);
-      camera.position.set(3, 2.5, 3);
-
-      renderer = new THREE.WebGLRenderer({ antialias: true });
-      renderer.setSize(w, h);
-      renderer.setPixelRatio(devicePixelRatio);
-      mount.innerHTML = "";
-      mount.appendChild(renderer.domElement);
-
-      controls = new OrbitControls(camera, renderer.domElement);
-      controls.enableDamping = true;
-
-      const amb = new THREE.AmbientLight(0xffffff, 0.7);
-      scene.add(amb);
-      const dir = new THREE.DirectionalLight(0xffffff, 0.7);
-      dir.position.set(5, 10, 5);
-      scene.add(dir);
-
-      // grid
-      const grid = new THREE.GridHelper(10, 20);
-      scene.add(grid);
-
-      window.addEventListener("resize", () => {
-        const w2 = mount.clientWidth;
-        const h2 = mount.clientHeight;
-        camera.aspect = w2 / h2;
-        camera.updateProjectionMatrix();
-        renderer.setSize(w2, h2);
-      });
-
-      animate();
-    }
-
-    function animate() {
-      requestAnimationFrame(animate);
-      controls.update();
-      renderer.render(scene, camera);
-    }
-
-    // Clear old objects except lights + grid
-    function clearSceneKeepBasics() {
-      const keep = new Set();
-      scene.traverse(obj => {
-        if (obj.isLight) keep.add(obj.uuid);
-        if (obj.type === "GridHelper") keep.add(obj.uuid);
-      });
-
-      const toRemove = [];
-      scene.children.forEach(child => {
-        if (!keep.has(child.uuid)) toRemove.push(child);
-      });
-      toRemove.forEach(obj => scene.remove(obj));
-    }
-
-    function colorForType(type) {
-      // simple fixed colors (not essential)
-      const map = {
-        wc: 0x6aa9ff,
-        sink: 0x7ee0a3,
-        shower: 0xffc46a,
-        bathtub: 0xff8fb3,
-        radiator: 0xd3d3d3,
-        door: 0xc2a06a,
-        window: 0x8fd3ff,
-        cabinet: 0xb18cff
-      };
-      return map[type] ?? 0x999999;
-    }
-
-    function renderLayout(layout) {
-      clearSceneKeepBasics();
-
-      const { width_m, depth_m, height_m } = layout.room;
-
-      // floor
-      const floorGeo = new THREE.PlaneGeometry(width_m, depth_m);
-      const floorMat = new THREE.MeshStandardMaterial({ color: 0xf4f4f4, side: THREE.DoubleSide });
-      const floor = new THREE.Mesh(floorGeo, floorMat);
-      floor.rotation.x = -Math.PI / 2;
-      floor.position.set(width_m / 2, 0, depth_m / 2);
-      scene.add(floor);
-
-      // walls (transparent)
-      const wallMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, transparent: true, opacity: 0.18 });
-      const backWall = new THREE.Mesh(new THREE.BoxGeometry(width_m, height_m, 0.02), wallMat);
-      backWall.position.set(width_m / 2, height_m / 2, 0);
-      scene.add(backWall);
-
-      const frontWall = new THREE.Mesh(new THREE.BoxGeometry(width_m, height_m, 0.02), wallMat);
-      frontWall.position.set(width_m / 2, height_m / 2, depth_m);
-      scene.add(frontWall);
-
-      const leftWall = new THREE.Mesh(new THREE.BoxGeometry(0.02, height_m, depth_m), wallMat);
-      leftWall.position.set(0, height_m / 2, depth_m / 2);
-      scene.add(leftWall);
-
-      const rightWall = new THREE.Mesh(new THREE.BoxGeometry(0.02, height_m, depth_m), wallMat);
-      rightWall.position.set(width_m, height_m / 2, depth_m / 2);
-      scene.add(rightWall);
-
-      // fixtures
-      layout.fixtures.forEach(f => {
-        const geo = new THREE.BoxGeometry(f.w_m, f.h_m, f.d_m);
-        const mat = new THREE.MeshStandardMaterial({ color: colorForType(f.type) });
-        const mesh = new THREE.Mesh(geo, mat);
-        mesh.position.set(f.x_m + f.w_m/2, f.h_m/2, f.z_m + f.d_m/2);
-        scene.add(mesh);
-      });
-
-      // camera framing
-      camera.position.set(width_m * 1.2, height_m * 1.2, depth_m * 1.2);
-      controls.target.set(width_m / 2, height_m / 3, depth_m / 2);
-      controls.update();
-    }
-
-    // ---------- Video -> Frames ----------
-    async function extractFramesFromVideo(file, frameCount) {
-      const url = URL.createObjectURL(file);
-
-      const video = document.createElement("video");
-      video.src = url;
-      video.crossOrigin = "anonymous";
-      video.muted = true;
-      video.playsInline = true;
-
-      await new Promise((resolve, reject) => {
-        video.onloadedmetadata = () => resolve();
-        video.onerror = () => reject(new Error("Video konnte nicht geladen werden."));
-      });
-
-      const duration = video.duration;
-      if (!isFinite(duration) || duration <= 0) throw new Error("Ungültige Videodauer.");
-
-      const canvas = document.createElement("canvas");
-      const ctx = canvas.getContext("2d", { willReadFrequently: true });
-
-      // Resize for cheaper upload (max width 768)
-      const vw = video.videoWidth || 1280;
-      const vh = video.videoHeight || 720;
-      const maxW = 768;
-      const scale = Math.min(1, maxW / vw);
-      canvas.width = Math.round(vw * scale);
-      canvas.height = Math.round(vh * scale);
-
-      const times = [];
-      // skip very first frame (often black), take evenly spaced
-      const start = Math.min(0.4, duration * 0.1);
-      const end = Math.max(duration - 0.2, start + 0.1);
-      for (let i = 0; i < frameCount; i++) {
-        const t = start + (i * (end - start)) / Math.max(1, frameCount - 1);
-        times.push(t);
-      }
-
-      const frames = [];
-      for (let i = 0; i < times.length; i++) {
-        const t = times[i];
-        setStatus(`Extrahiere Frame ${i+1}/${times.length} (t=${t.toFixed(2)}s)…`, "ok");
-        await seekTo(video, t);
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        const dataUrl = canvas.toDataURL("image/jpeg", 0.82);
-        frames.push(dataUrl);
-      }
-
-      URL.revokeObjectURL(url);
-      return frames;
-    }
-
-    function seekTo(video, time) {
-      return new Promise((resolve, reject) => {
-        const onSeeked = () => { cleanup(); resolve(); };
-        const onErr = () => { cleanup(); reject(new Error("Fehler beim Seek im Video.")); };
-        const cleanup = () => {
-          video.removeEventListener("seeked", onSeeked);
-          video.removeEventListener("error", onErr);
-        };
-        video.addEventListener("seeked", onSeeked);
-        video.addEventListener("error", onErr);
-        video.currentTime = time;
-      });
-    }
-
-    // ---------- OpenAI Call ----------
-    async function analyzeFramesWithOpenAI({ apiKey, model, frames }) {
-      const systemText =
-`Du bist Bauleiter & Badplaner. Analysiere die Bilder (Frames eines Bad-Videos).
-Schätze Raummaße in Metern (width_m=Breite X, depth_m=Tiefe Z, height_m=Höhe).
-Erkenne Sanitär-Objekte und gib deren Position (x_m,z_m) und Größe (w_m,d_m,h_m) an.
-(0,0) ist die linke hintere Ecke am Boden. x geht nach rechts (Breite), z nach vorne (Tiefe). y ist Höhe.
-Antworte ausschließlich als gültiges JSON im folgenden Format:
-
-{
-  "room": { "width_m": number, "depth_m": number, "height_m": number },
-  "fixtures": [
-    { "type": "wc|sink|shower|bathtub|radiator|door|window|cabinet", "x_m": number, "z_m": number, "w_m": number, "d_m": number, "h_m": number, "note": "optional" }
-  ],
-  "confidence": number,
-  "notes": [string]
-}
-
-Wichtig:
-- Wenn du Maße nicht sicher weißt, schätze realistisch (Bad oft 1.6–3.0m Breite, 1.8–4.0m Tiefe).
-- Fixtures dürfen nicht außerhalb des Raums liegen.`;
-
-      const input = [
-        {
-          role: "system",
-          content: [{ type: "text", text: systemText }]
-        },
-        {
-          role: "user",
-          content: [
-            { type: "text", text: "Hier sind Frames aus einem Bad-Video. Erstelle das Layout als JSON." },
-            ...frames.map(dataUrl => ({ type: "input_image", image_url: dataUrl }))
-          ]
-        }
-      ];
-
-      const r = await fetch("https://api.openai.com/v1/responses", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${apiKey}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          model,
-          input
-        })
-      });
-
-      if (!r.ok) {
-        const t = await r.text();
-        throw new Error(`OpenAI Fehler (${r.status}): ${t}`);
-      }
-
-      const json = await r.json();
-      const text = json.output_text || "";
-
-      let parsed;
-      try {
-        parsed = JSON.parse(text);
-      } catch {
-        const m = text.match(/\{[\s\S]*\}\s*$/);
-        if (!m) throw new Error("Modell hat kein gültiges JSON geliefert.");
-        parsed = JSON.parse(m[0]);
-      }
-      return parsed;
-    }
-
-    // ---------- Run ----------
-    runBtn.addEventListener("click", async () => {
-      try {
-        setStatus("", "");
-        jsonOut.textContent = "{}";
-
-        const apiKey = apiKeyEl.value.trim();
-        const model = modelEl.value.trim() || "gpt-4.1-mini";
-        const frameCount = Math.max(2, Math.min(12, parseInt(framesEl.value.trim(), 10) || 6));
-        const file = fileEl.files?.[0];
-
-        if (!apiKey) throw new Error("Bitte OpenAI API Key eintragen.");
-        if (!file) throw new Error("Bitte ein Video auswählen.");
-
-        runBtn.disabled = true;
-
-        setStatus("Lade Video & extrahiere Frames…", "ok");
-        const frames = await extractFramesFromVideo(file, frameCount);
-
-        setStatus("Sende Frames an OpenAI (Vision)…", "ok");
-        const layout = await analyzeFramesWithOpenAI({ apiKey, model, frames });
-
-        jsonOut.textContent = JSON.stringify(layout, null, 2);
-
-        setStatus(`Fertig. confidence=${layout?.confidence ?? "?"}`, "ok");
-        renderLayout(layout);
-
-      } catch (e) {
-        console.error(e);
-        setStatus(e?.message || String(e), "err");
-      } finally {
-        runBtn.disabled = false;
-      }
-    });
-  </script>
-</body>
-</html>
-export default async function handler(req, res) {
-  if (req.method !== "POST") return res.status(405).json({ error: "Use POST" });
-
-  try {
-    const { model, frames } = req.body || {};
-    if (!Array.isArray(frames) || frames.length === 0) {
-      return res.status(400).json({ error: "Missing frames" });
-    }
-
-    const systemText = `Du bist Bauleiter & Badplaner. Analysiere die Bilder (Frames eines Bad-Videos).
-Antworte ausschließlich als gültiges JSON:
-{
-  "room": { "width_m": number, "depth_m": number, "height_m": number },
-  "fixtures": [
-    { "type": "wc|sink|shower|bathtub|radiator|door|window|cabinet", "x_m": number, "z_m": number, "w_m": number, "d_m": number, "h_m": number, "note": "optional" }
-  ],
-  "confidence": number,
-  "notes": [string]
-}`;
-
-    const r = await fetch("https://api.openai.com/v1/responses", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        model: model || "gpt-4.1-mini",
-        input: [
-          { role: "system", content: [{ type: "text", text: systemText }] },
-          {
-            role: "user",
-            content: [
-              { type: "text", text: "Hier sind Frames aus einem Bad-Video. Erstelle Layout als JSON." },
-              ...frames.map((dataUrl) => ({ type: "input_image", image_url: dataUrl }))
-            ]
-          }
-        ]
-      })
-    });
-
-    const txt = await r.text();
-    if (!r.ok) return res.status(r.status).send(txt);
-
-    const out = JSON.parse(txt);
-    res.status(200).json({ output_text: out.output_text });
-  } catch (e) {
-    res.status(500).json({ error: e?.message || "Server error" });
-  }
-}
-
-<div class="card" style="margin-top:12px">
-  <b>Video Vorschau</b><br/>
-  <video id="preview" controls playsinline style="width:100%; max-height:360px; margin-top:8px; border-radius:12px; border:1px solid #ddd;"></video>
-</div>
-const preview = document.getElementById("preview");
-
-fileEl.addEventListener("change", () => {
-  const f = fileEl.files?.[0];
-  if (!f) return;
-  const url = URL.createObjectURL(f);
-  preview.src = url;
-  preview.load();
-});
+    <div id="viewer-container">
+        <model-viewer id="sanierungsViewer" src="" ar camera-controls shadow-intensity="1"></model-viewer>
+    </div>
+
+    <script>
+        // ACHTUNG: Diese Keys sind öffentlich sichtbar!
+        const OPENAI_API_KEY = "DEIN_OPENAI_KEY";
+        const STUDIO_3DAI_KEY = "DEIN_STUDIO_3DAI_KEY";
+
+        async function runSanierung() {
+            const imgUrl = document.getElementById('imageUrl').value;
+            const status = document.getElementById('status');
+            const btn = document.getElementById('startBtn');
+            const viewer = document.getElementById('sanierungsViewer');
+
+            if (!imgUrl) return alert("Bitte eine Bild-URL eingeben!");
+
+            btn.disabled = true;
+            
+            try {
+                // SCHRITT 1: OpenAI analysiert das Bild und schreibt den Rodin-Prompt
+                status.innerText = "OpenAI analysiert den Schaden...";
+                const aiRes = await fetch('https://api.openai.com/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${OPENAI_API_KEY}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        model: "gpt-4o",
+                        messages: [{
+                            role: "user",
+                            content: [
+                                { type: "text", text: "Analyze this building damage and create a high-quality
