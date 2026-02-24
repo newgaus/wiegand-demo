@@ -386,3 +386,54 @@ Wichtig:
   </script>
 </body>
 </html>
+export default async function handler(req, res) {
+  if (req.method !== "POST") return res.status(405).json({ error: "Use POST" });
+
+  try {
+    const { model, frames } = req.body || {};
+    if (!Array.isArray(frames) || frames.length === 0) {
+      return res.status(400).json({ error: "Missing frames" });
+    }
+
+    const systemText = `Du bist Bauleiter & Badplaner. Analysiere die Bilder (Frames eines Bad-Videos).
+Antworte ausschließlich als gültiges JSON:
+{
+  "room": { "width_m": number, "depth_m": number, "height_m": number },
+  "fixtures": [
+    { "type": "wc|sink|shower|bathtub|radiator|door|window|cabinet", "x_m": number, "z_m": number, "w_m": number, "d_m": number, "h_m": number, "note": "optional" }
+  ],
+  "confidence": number,
+  "notes": [string]
+}`;
+
+    const r = await fetch("https://api.openai.com/v1/responses", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model: model || "gpt-4.1-mini",
+        input: [
+          { role: "system", content: [{ type: "text", text: systemText }] },
+          {
+            role: "user",
+            content: [
+              { type: "text", text: "Hier sind Frames aus einem Bad-Video. Erstelle Layout als JSON." },
+              ...frames.map((dataUrl) => ({ type: "input_image", image_url: dataUrl }))
+            ]
+          }
+        ]
+      })
+    });
+
+    const txt = await r.text();
+    if (!r.ok) return res.status(r.status).send(txt);
+
+    const out = JSON.parse(txt);
+    res.status(200).json({ output_text: out.output_text });
+  } catch (e) {
+    res.status(500).json({ error: e?.message || "Server error" });
+  }
+}
+
