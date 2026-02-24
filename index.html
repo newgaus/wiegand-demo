@@ -1,129 +1,828 @@
-<div class="api-wrap" style="margin-left:12px">
-  <label>🔑 3DAI Studio Key</label>
-  <input type="password" id="studioKey" placeholder="3dai-..." />
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gebäudetrocknung Wiegand – KI Demo</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --blue:#1a56db;--blue-dark:#1e429f;--blue-light:#ebf5ff;--blue-mid:#3b82f6;
+  --gray-50:#f9fafb;--gray-100:#f3f4f6;--gray-200:#e5e7eb;--gray-300:#d1d5db;
+  --gray-400:#9ca3af;--gray-500:#6b7280;--gray-600:#4b5563;--gray-700:#374151;--gray-800:#1f2937;
+  --green:#059669;--green-light:#d1fae5;--red:#dc2626;--red-light:#fee2e2;
+  --r:12px;--rs:8px;--shadow:0 1px 4px rgba(0,0,0,.09);--shadow-md:0 4px 16px rgba(0,0,0,.1);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Inter',sans-serif;background:#f1f5f9;color:var(--gray-800);font-size:14px;line-height:1.5;}
+
+/* HEADER */
+.header{background:linear-gradient(135deg,#1e3a8a,#1a56db);padding:0 28px;display:flex;align-items:center;justify-content:space-between;height:60px;position:sticky;top:0;z-index:100;box-shadow:0 2px 10px rgba(0,0,0,.2);}
+.logo{display:flex;align-items:center;gap:10px;}
+.logo-icon{width:34px;height:34px;background:rgba(255,255,255,.2);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;}
+.logo h1{font-size:15px;font-weight:700;color:white;line-height:1.2;}
+.logo p{font-size:10px;color:rgba(255,255,255,.7);}
+.api-wrap{display:flex;align-items:center;gap:8px;}
+.api-wrap label{font-size:11px;font-weight:600;color:rgba(255,255,255,.8);}
+.api-wrap input{border:1.5px solid rgba(255,255,255,.3);border-radius:var(--rs);padding:7px 11px;font-family:monospace;font-size:12px;outline:none;width:240px;background:rgba(255,255,255,.15);color:white;}
+.api-wrap input::placeholder{color:rgba(255,255,255,.5);}
+.api-wrap input:focus{border-color:white;background:rgba(255,255,255,.25);}
+
+/* LAYOUT */
+.main{max-width:980px;margin:0 auto;padding:24px 20px;}
+.card{background:white;border:1px solid var(--gray-200);border-radius:var(--r);padding:20px;margin-bottom:16px;box-shadow:var(--shadow);}
+.card-title{font-size:12px;font-weight:700;color:var(--gray-600);text-transform:uppercase;letter-spacing:.07em;margin-bottom:14px;display:flex;align-items:center;gap:6px;}
+
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+
+/* FIELDS */
+.f label{display:block;font-size:10px;font-weight:700;color:var(--gray-500);margin-bottom:4px;text-transform:uppercase;letter-spacing:.05em;}
+.f input,.f select{width:100%;border:1.5px solid var(--gray-200);border-radius:var(--rs);padding:9px 11px;font-family:'Inter',sans-serif;font-size:13px;color:var(--gray-800);outline:none;transition:border-color .2s;background:white;}
+.f input:focus,.f select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(26,86,219,.07);}
+
+/* UPLOAD */
+.upload-zone{border:2px dashed var(--gray-300);border-radius:10px;padding:20px;text-align:center;background:var(--gray-50);transition:all .2s;}
+.upload-zone:hover{border-color:var(--blue);background:var(--blue-light);}
+.upload-zone .uico{font-size:1.8rem;margin-bottom:8px;}
+.upload-zone p{font-size:12px;color:var(--gray-500);margin-bottom:10px;}
+.upload-zone p span{color:var(--blue);font-weight:600;}
+.upload-zone input[type=file]{display:block;margin:0 auto;cursor:pointer;font-size:13px;color:var(--gray-600);}
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px;margin-top:12px;}
+.pthumb{position:relative;border-radius:8px;overflow:hidden;aspect-ratio:1;border:2px solid var(--gray-200);}
+.pthumb img{width:100%;height:100%;object-fit:cover;}
+.pthumb .del{position:absolute;top:3px;right:3px;background:rgba(220,38,38,.85);color:white;border:none;border-radius:50%;width:20px;height:20px;font-size:11px;cursor:pointer;font-weight:700;display:flex;align-items:center;justify-content:center;}
+.pthumb .badge{position:absolute;bottom:3px;left:3px;background:var(--blue);color:white;font-size:8px;font-weight:700;padding:2px 5px;border-radius:4px;}
+.pcount{font-size:11px;color:var(--green);font-weight:600;margin-top:6px;}
+
+/* AUDIO */
+.audio-row{display:flex;gap:18px;align-items:flex-start;}
+.rec-col{text-align:center;flex-shrink:0;}
+.rec-btn{width:62px;height:62px;border-radius:50%;border:2.5px solid var(--blue);background:var(--blue-light);color:var(--blue);font-size:1.5rem;cursor:pointer;display:flex;align-items:center;justify-content:center;margin:0 auto 6px;transition:all .2s;}
+.rec-btn:hover{background:var(--blue);color:white;}
+.rec-btn.rec{border-color:var(--red);background:var(--red-light);color:var(--red);animation:pulse 1s infinite;}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+.rec-lbl{font-size:10px;font-weight:600;color:var(--gray-400);}
+.rec-lbl.on{color:var(--red);}
+.rec-time{font-size:15px;font-weight:700;font-family:monospace;color:var(--gray-700);margin-top:3px;}
+.audio-info{flex:1;}
+.audio-info h3{font-size:13px;font-weight:600;margin-bottom:5px;}
+.audio-info ul{font-size:12px;color:var(--gray-500);line-height:1.9;list-style:none;padding:0;}
+.audio-info ul li::before{content:"• ";color:var(--blue);}
+.aprev{display:none;margin-top:10px;}
+.aprev audio{width:100%;}
+.transcript{display:none;background:var(--blue-light);border:1px solid #bfdbfe;border-radius:var(--rs);padding:10px;margin-top:8px;font-size:12px;line-height:1.7;}
+.transcript.on{display:block;}
+.tlbl{font-size:9px;font-weight:700;color:var(--blue-dark);margin-bottom:3px;text-transform:uppercase;letter-spacing:.06em;}
+
+/* MODES */
+.modes{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px;}
+.mc{border:1.5px solid var(--gray-200);border-radius:var(--rs);padding:10px 4px;text-align:center;cursor:pointer;font-size:10px;font-weight:600;color:var(--gray-500);transition:all .2s;background:white;}
+.mc:hover{border-color:var(--blue);}
+.mc.on{border-color:var(--blue);background:var(--blue-light);color:var(--blue);}
+.mc .mi{font-size:1.1rem;display:block;margin-bottom:2px;}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:5px;border:none;border-radius:var(--rs);padding:9px 16px;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;}
+.btn-p{background:var(--blue);color:white;}
+.btn-p:hover{background:var(--blue-dark);}
+.btn-p:disabled{opacity:.5;cursor:not-allowed;}
+.btn-s{background:white;color:var(--gray-700);border:1.5px solid var(--gray-200);}
+.btn-s:hover{background:var(--gray-50);}
+.btn-g{background:var(--green);color:white;}
+.btn-g:hover{opacity:.9;}
+.btn-full{width:100%;justify-content:center;padding:12px;font-size:14px;}
+
+/* LOADING */
+.loading{display:none;text-align:center;padding:30px;}
+.loading.on{display:block;}
+.spinner{width:34px;height:34px;border:3px solid var(--gray-100);border-top-color:var(--blue);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 10px;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading p{color:var(--gray-500);font-size:13px;}
+.loading span{color:var(--blue);font-weight:600;}
+
+/* RESULT */
+.rbox{display:none;}
+.rbox.on{display:block;}
+.rhdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--gray-100);}
+.rtitle{font-size:15px;font-weight:700;color:var(--green);display:flex;align-items:center;gap:6px;}
+.rcontent{font-size:13px;line-height:1.9;color:var(--gray-700);}
+.rcontent h3{font-size:10px;font-weight:700;color:var(--blue-dark);text-transform:uppercase;letter-spacing:.07em;margin:18px 0 6px;padding-bottom:3px;border-bottom:2px solid var(--blue-light);}
+.rcontent h3:first-child{margin-top:0;}
+.rcontent strong{color:var(--gray-800);font-weight:600;}
+
+/* 3D KONZEPTE */
+.viz-section{background:linear-gradient(135deg,#eff6ff,#dbeafe);border:1px solid #bfdbfe;border-radius:var(--r);padding:20px;margin-top:16px;}
+.viz-title{font-size:14px;font-weight:700;color:var(--blue-dark);margin-bottom:4px;}
+.viz-sub{font-size:11px;color:var(--gray-500);margin-bottom:14px;}
+.viz-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+
+.vorher-box{text-align:center;margin-bottom:16px;}
+.vorher-box img{max-height:200px;border-radius:10px;border:3px solid var(--red);box-shadow:var(--shadow-md);}
+.vorher-lbl{font-size:11px;font-weight:700;color:var(--red);margin-top:6px;text-transform:uppercase;letter-spacing:.06em;}
+
+.konzepte-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:14px;}
+.konzept-card{background:white;border-radius:10px;overflow:hidden;box-shadow:var(--shadow-md);border:2px solid var(--gray-200);transition:all .2s;}
+.konzept-card:hover{border-color:var(--blue);transform:translateY(-2px);box-shadow:0 8px 24px rgba(26,86,219,.15);}
+.konzept-header{padding:10px 12px;font-size:11px;font-weight:700;color:white;text-align:center;}
+.k1 .konzept-header{background:linear-gradient(135deg,#1a56db,#3b82f6);}
+.k2 .konzept-header{background:linear-gradient(135deg,#059669,#10b981);}
+.k3 .konzept-header{background:linear-gradient(135deg,#7c3aed,#a78bfa);}
+.konzept-card img{width:100%;aspect-ratio:1;object-fit:cover;display:block;}
+.konzept-info{padding:10px 12px;}
+.konzept-info p{font-size:11px;color:var(--gray-500);line-height:1.6;}
+.konzept-preis{font-size:12px;font-weight:700;color:var(--blue);margin-top:5px;}
+
+.loading-konzepte{display:none;padding:24px;text-align:center;}
+.loading-konzepte.on{display:block;}
+.konzept-steps{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:12px;}
+.kstep{font-size:11px;padding:4px 10px;border-radius:20px;background:var(--gray-100);color:var(--gray-500);}
+.kstep.done{background:var(--green-light);color:var(--green);}
+.kstep.active{background:var(--blue-light);color:var(--blue);font-weight:600;}
+
+/* INVOICE */
+.inv-section{background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:1px solid #86efac;border-radius:var(--r);padding:20px;margin-top:16px;}
+.inv-section h3{font-size:14px;font-weight:700;color:#166534;margin-bottom:4px;}
+.inv-section>p{font-size:12px;color:var(--gray-600);margin-bottom:14px;}
+.inv-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px;}
+.if label{display:block;font-size:10px;font-weight:700;color:#166534;margin-bottom:3px;text-transform:uppercase;letter-spacing:.04em;}
+.if input{width:100%;border:1.5px solid #86efac;border-radius:var(--rs);padding:8px 10px;font-family:'Inter',sans-serif;font-size:13px;outline:none;background:white;transition:border-color .2s;}
+.if input:focus{border-color:var(--green);}
+.inv-prev{background:white;border:1px solid var(--gray-200);border-radius:var(--rs);padding:14px;margin-bottom:10px;display:none;font-size:12px;line-height:1.9;}
+.inv-prev.on{display:block;}
+
+.err{display:none;background:var(--red-light);border:1px solid #fca5a5;color:var(--red);padding:9px 14px;border-radius:var(--rs);font-size:12px;margin-bottom:12px;}
+.err.on{display:block;}
+
+@media(max-width:700px){
+  .g2,.g3,.modes,.inv-grid,.konzepte-grid{grid-template-columns:1fr;}
+  .header{flex-direction:column;height:auto;padding:12px 16px;gap:8px;align-items:flex-start;}
+  .audio-row{flex-direction:column;}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">
+    <div class="logo-icon">💧</div>
+    <div>
+      <h1>Gebäudetrocknung Wiegand</h1>
+      <p>KI-Demo · Eschwege · 01520 88 112 88</p>
+    </div>
+  </div>
+  <div class="api-wrap">
+    <label>🔑 OpenAI Key</label>
+    <input type="password" id="apiKey" placeholder="sk-..." />
+  </div>
+  <div class="api-wrap" style="margin-left:12px">
+    <label>🔑 Gemini Key</label>
+    <input type="password" id="geminiKey" placeholder="AIza..." />
+  </div>
 </div>
 
-<div class="viz-section">
-  <div class="viz-hdr">
-    <div>
-      <div class="viz-title">🎨 3D Sanierungskonzept & Visualisierung</div>
-      <div class="viz-sub">OpenAI plant die Sanierung – Rodin AI (3DAI Studio) baut das interaktive 3D-Modell</div>
+<div class="main">
+  <div class="err" id="err"></div>
+
+  <!-- OBJEKTDATEN -->
+  <div class="card">
+    <div class="card-title">📋 Objektdaten</div>
+    <div class="g3" style="margin-bottom:12px">
+      <div class="f"><label>Objekt / Adresse</label><input type="text" id="objekt" placeholder="z.B. EFH, Musterstr. 5, Eschwege" /></div>
+      <div class="f"><label>Auftraggeber / Kunde</label><input type="text" id="kunde" placeholder="z.B. Familie Müller" /></div>
+      <div class="f">
+        <label>Schadensart</label>
+        <select id="schaden">
+          <option value="">Bitte wählen...</option>
+          <option>Wasserschaden (Rohrbruch)</option>
+          <option>Wasserschaden (Überschwemmung)</option>
+          <option>Leckage (unbekannte Ursache)</option>
+          <option>Schimmelbefall</option>
+          <option>Feuchtigkeit in Wänden/Böden</option>
+          <option>Badezimmer-Sanierung</option>
+          <option>Keller-Sanierung</option>
+          <option>Sonstiges</option>
+        </select>
+      </div>
     </div>
-    <button class="btn btn-p" id="vizBtn" onclick="generate3DConcept()">✨ 3D Modell generieren</button>
+    <div class="g3">
+      <div class="f"><label>Fläche (m²)</label><input type="number" id="flaeche" placeholder="z.B. 12" /></div>
+      <div class="f">
+        <label>Versicherungsfall</label>
+        <select id="vers"><option>Nein</option><option>Ja – Wohngebäude</option><option>Ja – Hausrat</option><option>Ja – Haftpflicht</option><option>Unklar</option></select>
+      </div>
+      <div class="f"><label>Budget-Ziel (€)</label><input type="number" id="budget" placeholder="z.B. 5000" /></div>
+    </div>
   </div>
 
-  <div class="loading-konzepte" id="ldViz">
+  <!-- FOTOS -->
+  <div class="card">
+    <div class="card-title">📷 Fotos des Schadens <span style="font-weight:400;text-transform:none;font-size:11px;color:var(--gray-400)">(mehrere möglich)</span></div>
+    <div class="upload-zone">
+      <div class="uico">📷</div>
+      <p>Fotos auswählen – <span>mehrere gleichzeitig möglich</span><br>
+      <span style="font-size:10px;color:var(--gray-400)">JPG, PNG, WEBP · Erstes Foto = Hauptbild für Visualisierung</span></p>
+      <input type="file" id="fileInput" accept="image/*" multiple onchange="handleFiles(this)" />
+    </div>
+    <div class="pgrid" id="pgrid"></div>
+    <div class="pcount" id="pcount"></div>
+  </div>
+
+  <!-- AUDIO -->
+  <div class="card">
+    <div class="card-title">🎤 Sprachbeschreibung <span style="font-weight:400;text-transform:none;font-size:11px;color:var(--gray-400)">(unbegrenzte Länge)</span></div>
+    <div class="audio-row">
+      <div class="rec-col">
+        <button class="rec-btn" id="recBtn" onclick="toggleRec()">🎤</button>
+        <div class="rec-lbl" id="recLbl">Drücken</div>
+        <div class="rec-time" id="recTime" style="display:none">0:00</div>
+      </div>
+      <div class="audio-info">
+        <h3>Schaden mündlich beschreiben</h3>
+        <ul>
+          <li>Unbegrenzte Aufnahmedauer – sprechen Sie alles</li>
+          <li>Beschreiben Sie: Wände, Boden, Decke, Gerüche</li>
+          <li>Wo genau ist der Schaden?</li>
+          <li>Mögliche Ursache wenn bekannt</li>
+        </ul>
+        <div class="aprev" id="aprev">
+          <audio id="aplayer" controls></audio>
+          <p style="color:var(--green);font-size:11px;margin-top:4px;font-weight:500">✓ Aufnahme gespeichert – bereit zur Analyse</p>
+        </div>
+        <div class="transcript" id="tbox">
+          <div class="tlbl">🗣️ Transkript der Aufnahme</div>
+          <div id="ttext"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ANALYSE OPTIONEN -->
+  <div class="card">
+    <div class="card-title">⚙️ Analyse-Optionen</div>
+    <div class="modes">
+      <div class="mc on" id="m-s" onclick="toggleM('s')"><span class="mi">🔍</span>Schadensbeurteilung</div>
+      <div class="mc on" id="m-k" onclick="toggleM('k')"><span class="mi">📋</span>Sanierungskonzept</div>
+      <div class="mc on" id="m-p" onclick="toggleM('p')"><span class="mi">💶</span>Kostenschätzung</div>
+      <div class="mc on" id="m-f" onclick="toggleM('f')"><span class="mi">🏦</span>Förderung</div>
+    </div>
+    <button class="btn btn-p btn-full" id="analyzeBtn" onclick="runAnalyse()">🔍 KI-Analyse starten</button>
+  </div>
+
+  <div class="loading" id="loading">
     <div class="spinner"></div>
-    <p id="vizStatus">KI plant Sanierung... <span>Bitte warten</span></p>
+    <p id="ldtxt">Analysiere... <span>Bitte warten</span></p>
   </div>
 
-  <div id="vizResult" style="display:none; text-align:center;">
-    <div class="vorher-box" id="vorherBox" style="margin-bottom: 20px;"></div>
-    
-    <div style="background:white; border-radius:var(--r); padding:15px; box-shadow:var(--shadow-md);">
-      <p style="font-weight:700; color:var(--blue); margin-bottom:10px;">Interaktives 3D-Sanierungskonzept (Rodin v2)</p>
-      <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
-      <model-viewer id="rodinViewer" src="" ar camera-controls shadow-intensity="1" style="width:100%; height:400px; background:#f9fafb;"></model-viewer>
-      <p style="font-size:10px; color:var(--gray-400); margin-top:8px;">Modell generiert durch 3DAI Studio API · Rodin Architectural Engine</p>
+  <!-- ERGEBNIS -->
+  <div class="card rbox" id="rcard">
+    <div class="rhdr">
+      <div class="rtitle">✅ Analyse abgeschlossen</div>
+      <button class="btn btn-s" onclick="navigator.clipboard.writeText(document.getElementById('rcontent').innerText).then(()=>alert('✅ Kopiert!'))">📋 Kopieren</button>
+    </div>
+    <div class="rcontent" id="rcontent"></div>
+
+    <!-- 3D KONZEPTE -->
+    <div class="viz-section">
+      <div class="viz-hdr">
+        <div>
+          <div class="viz-title">🎨 3 Sanierungskonzepte – KI-Visualisierung</div>
+          <div class="viz-sub">KI erstellt 3 verschiedene Stil-Vorschläge für die Sanierung – Kunde wählt seinen Favoriten</div>
+        </div>
+        <button class="btn btn-p" id="vizBtn" onclick="generateKonzepte()">✨ 3 Konzepte erstellen</button>
+      </div>
+
+      <div class="loading-konzepte" id="ldViz">
+        <div class="spinner"></div>
+        <p>3 Sanierungskonzepte werden generiert... <span>~60 Sekunden</span></p>
+        <div class="konzept-steps">
+          <div class="kstep" id="ks1">⏳ Raum analysieren</div>
+          <div class="kstep" id="ks2">⏳ Konzept 1 – Minimalist</div>
+          <div class="kstep" id="ks3">⏳ Konzept 2 – Elegant</div>
+          <div class="kstep" id="ks4">⏳ Konzept 3 – Naturstein</div>
+        </div>
+      </div>
+
+      <div id="vizResult" style="display:none">
+        <!-- Vorher -->
+        <div class="vorher-box" id="vorherBox"></div>
+        <div style="text-align:center;font-size:13px;font-weight:700;color:var(--blue);margin-bottom:12px;padding:10px;background:white;border-radius:8px;border:1px dashed var(--blue)">
+          ↓ KI-Vorschläge für die Sanierung – Wählen Sie gemeinsam mit dem Kunden ↓
+        </div>
+        <!-- 3 Konzepte -->
+        <div class="konzepte-grid" id="konzepteGrid"></div>
+      </div>
+    </div>
+
+    <!-- RECHNUNG -->
+    <div class="inv-section">
+      <h3>📧 Rechnung erstellen & senden</h3>
+      <p>Aus der KI-Analyse wird automatisch eine professionelle Rechnung erstellt</p>
+      <div class="inv-grid">
+        <div class="if"><label>Kunden-E-Mail</label><input type="email" id="inv-mail" placeholder="kunde@email.de" /></div>
+        <div class="if"><label>Rechnungsnummer</label><input type="text" id="inv-nr" /></div>
+        <div class="if"><label>Gesamtbetrag brutto (€)</label><input type="number" id="inv-betrag" placeholder="3500" /></div>
+      </div>
+      <div class="inv-prev" id="invPrev"></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-s" onclick="previewInv()">👁️ Vorschau</button>
+        <button class="btn btn-p" onclick="downloadPDF()">📄 PDF herunterladen</button>
+        <button class="btn btn-g" onclick="sendInv()">📧 Per E-Mail senden</button>
+      </div>
+      <div id="invStatus" style="margin-top:8px;font-size:12px"></div>
     </div>
   </div>
+
 </div>
 
 <script>
-// Fügen Sie diese Funktion am Ende Ihres <script> Bereichs hinzu
+// ===== SYSTEM PROMPT =====
+const SYS = `Du bist der KI-Assistent der Firma Gebäudetrocknung Wiegand, Forstgasse 19a, 37269 Eschwege.
+Tel: 01520 88 112 88 · kontakt@gebaeudetrocknung-wiegand.de
+Geschäftsführer: Werner Wiegand & Rayk Wiegand
 
-async function generate3DConcept() {
-  const openaiKey = document.getElementById('apiKey').value.trim();
-  const studioKey = document.getElementById('studioKey').value.trim();
-  
-  if (!openaiKey || !studioKey) {
-    showErr('Bitte OpenAI Key UND 3DAI Studio Key eingeben.');
-    return;
-  }
-  if (!photos.length) {
-    showErr('Bitte zuerst ein Schadensfoto hochladen.');
-    return;
-  }
+LEISTUNGEN: Leckageortung, Wasserschadensanierung, Bautrocknung, Feuchtemessung, Schimmelbehandlung, Dokumentation, Versicherungskommunikation
 
-  const btn = document.getElementById('vizBtn');
-  const ld = document.getElementById('ldViz');
-  const resDiv = document.getElementById('vizResult');
-  const statusTxt = document.getElementById('vizStatus');
+FACHWISSEN:
+- Trocknungszeiten: Zementestrich 4-8 Wo, Anhydrit 2-4 Wo, Mauerwerk 8-16 Wo
+- Geräte: Kondensationstrockner (10-20L/h), Adsorptionstrockner, Axialventilatoren
+- CM-Grenzwerte: Zementestrich max 2,0%, Anhydrit max 0,5%
+- Normen: DIN 1045, WTA 6-1, WTA 6-4, VOB/B
 
-  btn.disabled = true;
-  ld.classList.add('on');
-  resDiv.style.display = 'none';
+PREISE NORDHESSEN 2024/2025:
+- Leckageortung: 180-450€ pauschal
+- Feuchtemessung & Protokoll: 100-280€
+- Technische Trocknung: 28-50€/m²/Woche inkl. Geräte
+- Schimmelbehandlung: 35-65€/m²
+- Estrich entfernen: 18-30€/m²
+- Estrich neu (Zement): 45-85€/m²
+- Fliesen entfernen: 16-28€/m²
+- Fliesen legen inkl. Material: 75-130€/m²
+- Putz: 28-58€/m²
+- Malerarbeiten inkl. Material: 14-32€/m²
+- Elektriker: 68-98€/Std
+- Entsorgung Bauschutt: 180-450€ pauschal
 
-  try {
-    // SCHRITT 1: OpenAI erstellt den Sanierungs-Prompt für Rodin
-    statusTxt.innerHTML = "OpenAI erstellt Sanierungsplan... <span>(Architektur-Analyse)</span>";
-    
-    const aiRes = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${openaiKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: "gpt-4o",
-        messages: [{
-          role: "user",
-          content: [
-            { type: "text", text: "Analysiere den Schaden auf diesem Bild und erstelle einen englischen Prompt für eine 3D-KI (Rodin). Der Prompt soll eine perfekt sanierte Version dieser Wand/dieses Raums beschreiben: 'Professional architectural 3D model, clean white plaster walls, modern bright interior, photorealistic 4k textures, no damage'. Gib NUR den englischen Prompt zurück." },
-            { type: "image_url", image_url: { url: 'data:image/jpeg;base64,' + photos[0].b64 } }
-          ]
-        }]
-      })
-    });
-    
-    const aiData = await aiRes.json();
-    const rodinPrompt = aiData.choices[0].message.content;
+Erstelle immer realistische, professionelle, präzise Analysen auf Deutsch.`;
 
-    // SCHRITT 2: 3DAI Studio Task starten
-    statusTxt.innerHTML = "Rodin AI baut 3D-Modell... <span>(Dauer ca. 60s)</span>";
-    
-    const studioRes = await fetch('https://api.3daistudio.com/v1/generate', {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${studioKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        engine: "rodin-v2",
-        prompt: rodinPrompt,
-        quality: "high"
-      })
-    });
-    
-    const studioData = await studioRes.json();
-    const taskId = studioData.id;
+// ===== STATE =====
+let photos=[], audBlob=null, isRec=false;
+let mRec=null, aChunks=[], timerInt=null, recSec=0;
+let activeM=new Set(['s','k','p','f']);
+let lastAnalysis='';
 
-    // SCHRITT 3: Polling (Warten bis fertig)
-    const poll = setInterval(async () => {
-      const check = await fetch(`https://api.3daistudio.com/v1/status/${taskId}`, {
-        headers: { 'Authorization': `Bearer ${studioKey}` }
-      });
-      const pollData = await check.json();
+// ===== FOTOS =====
+function handleFiles(input){
+  const files=Array.from(input.files);
+  if(!files.length)return;
+  let done=0;
+  files.forEach(file=>{
+    const r=new FileReader();
+    r.onload=e=>{
+      photos.push({b64:e.target.result.split(',')[1],full:e.target.result,name:file.name});
+      done++;
+      if(done===files.length)renderPhotos();
+    };
+    r.readAsDataURL(file);
+  });
+  input.value='';
+}
+function renderPhotos(){
+  document.getElementById('pgrid').innerHTML=photos.map((p,i)=>`
+    <div class="pthumb">
+      <img src="${p.full}"/>
+      <button class="del" onclick="delP(${i})">×</button>
+      ${i===0?'<span class="badge">Haupt</span>':''}
+    </div>`).join('');
+  document.getElementById('pcount').textContent=photos.length?`✓ ${photos.length} Foto${photos.length>1?'s':''} geladen`:'';
+}
+function delP(i){photos.splice(i,1);renderPhotos();}
 
-      if (pollData.status === 'completed') {
-        clearInterval(poll);
-        
-        // Vorher-Bild anzeigen
-        document.getElementById('vorherBox').innerHTML = `
-          <img src="${photos[0].full}" style="max-height:150px; border:2px solid var(--red); border-radius:8px;" />
-          <div style="color:var(--red); font-size:10px; font-weight:700; margin-top:5px;">📷 IST-ZUSTAND (SCHADEN)</div>
-        `;
-        
-        document.getElementById('rodinViewer').src = pollData.model_url;
-        resDiv.style.display = 'block';
-        ld.classList.remove('on');
-        btn.disabled = false;
-      } else if (pollData.status === 'failed') {
-        clearInterval(poll);
-        showErr('3D-Generierung fehlgeschlagen.');
-        ld.classList.remove('on');
-        btn.disabled = false;
-      }
-    }, 5000);
-
-  } catch (e) {
-    showErr('Fehler: ' + e.message);
-    ld.classList.remove('on');
-    btn.disabled = false;
+// ===== AUDIO =====
+async function toggleRec(){
+  if(!isRec){
+    try{
+      const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+      const mime=MediaRecorder.isTypeSupported('audio/webm;codecs=opus')?'audio/webm;codecs=opus':
+                 MediaRecorder.isTypeSupported('audio/mp4')?'audio/mp4':'audio/webm';
+      mRec=new MediaRecorder(stream,{mimeType:mime,audioBitsPerSecond:128000});
+      aChunks=[];
+      mRec.ondataavailable=e=>{if(e.data.size>0)aChunks.push(e.data);};
+      mRec.onstop=()=>{
+        audBlob=new Blob(aChunks);
+        document.getElementById('aplayer').src=URL.createObjectURL(audBlob);
+        document.getElementById('aprev').style.display='block';
+        stream.getTracks().forEach(t=>t.stop());
+      };
+      mRec.start(500);
+      isRec=true;recSec=0;
+      document.getElementById('recBtn').textContent='⏹';
+      document.getElementById('recBtn').classList.add('rec');
+      document.getElementById('recLbl').textContent='● Läuft';
+      document.getElementById('recLbl').classList.add('on');
+      document.getElementById('recTime').style.display='block';
+      timerInt=setInterval(()=>{
+        recSec++;
+        const m=Math.floor(recSec/60),s=recSec%60;
+        document.getElementById('recTime').textContent=`${m}:${String(s).padStart(2,'0')}`;
+      },1000);
+    }catch(e){showErr('Mikrofon-Zugriff verweigert – bitte in Browser-Einstellungen erlauben.');}
+  }else{
+    mRec.stop();isRec=false;clearInterval(timerInt);
+    document.getElementById('recBtn').textContent='🎤';
+    document.getElementById('recBtn').classList.remove('rec');
+    document.getElementById('recLbl').textContent='✓ Gespeichert';
+    document.getElementById('recLbl').classList.remove('on');
   }
 }
+
+// ===== MODES =====
+function toggleM(m){
+  const el=document.getElementById('m-'+m);
+  if(activeM.has(m)){activeM.delete(m);el.classList.remove('on');}
+  else{activeM.add(m);el.classList.add('on');}
+}
+
+// ===== ANALYSE =====
+async function runAnalyse(){
+  const key=document.getElementById('apiKey').value.trim();
+  document.getElementById('err').className='err';
+  if(!key){showErr('Bitte OpenAI API Key eingeben.');return;}
+  if(!photos.length&&!audBlob){showErr('Bitte Foto hochladen oder Sprachaufnahme machen.');return;}
+
+  document.getElementById('analyzeBtn').disabled=true;
+  document.getElementById('loading').classList.add('on');
+  document.getElementById('rcard').classList.remove('on');
+
+  let transcript='';
+  if(audBlob){
+    document.getElementById('ldtxt').innerHTML='Transkribiere Sprachaufnahme... <span>Bitte warten</span>';
+    try{
+      const fd=new FormData();
+      const ext=audBlob.type.includes('mp4')?'mp4':'webm';
+      fd.append('file',audBlob,'aufnahme.'+ext);
+      fd.append('model','whisper-1');
+      fd.append('language','de');
+      const r=await fetch('https://api.openai.com/v1/audio/transcriptions',{method:'POST',headers:{'Authorization':'Bearer '+key},body:fd});
+      const d=await r.json();
+      if(d.text){
+        transcript=d.text;
+        document.getElementById('ttext').textContent=transcript;
+        document.getElementById('tbox').classList.add('on');
+      }
+    }catch(e){showErr('Transkription fehlgeschlagen: '+e.message);doneBtn();return;}
+  }
+
+  document.getElementById('ldtxt').innerHTML='KI analysiert & erstellt Konzept... <span>Bitte warten</span>';
+
+  const obj=document.getElementById('objekt').value;
+  const kd=document.getElementById('kunde').value;
+  const sch=document.getElementById('schaden').value;
+  const fl=document.getElementById('flaeche').value;
+  const vs=document.getElementById('vers').value;
+  const bd=document.getElementById('budget').value;
+
+  const parts=[];
+  if(activeM.has('s'))parts.push(`### SCHADENSBEURTEILUNG
+Analysiere alle Fotos und die Sprachbeschreibung:
+- Alle betroffenen Bereiche (Wände, Boden, Decke, Sanitär, Elektro)
+- Ausmaß und Schweregrad je Bereich: leicht / mittel / schwer / kritisch
+- Sichtbare Schäden im Detail beschreiben
+- Wahrscheinliche Schadensursache
+- Schimmelrisiko einschätzen
+- Dringlichkeit: sofort / innerhalb 24h / innerhalb 1 Woche`);
+
+  if(activeM.has('k'))parts.push(`### SANIERUNGSKONZEPT – SCHRITT FÜR SCHRITT
+1. Sofortmaßnahmen (was ist jetzt sofort zu tun?)
+2. Sicherheitsmaßnahmen (Strom, Wasser absperren)
+3. Schadensanalyse & CM-Feuchtemessung (Methode, Zielwerte)
+4. Trocknungsphase (Gerätetyp, Aufstellung, Dauer, CM-Zielwert)
+5. Rückbauarbeiten (was entfernen, Reihenfolge)
+6. Sanierungsarbeiten nach Gewerk (Reihenfolge beachten!)
+7. Wiederherstellung (Material, Oberflächen)
+8. Feuchteabschlussmessung & Trocknungsprotokoll
+Benötigte Gewerke: Trocknungstechnik, Elektriker, Fliesenleger, Maler, Schreiner`);
+
+  if(activeM.has('p'))parts.push(`### KOSTENSCHÄTZUNG – EINZELPOSTEN
+Realistische Preise für Nordhessen – jeden Posten einzeln ausweisen:
+Pos. 1 – Leckageortung / Erstanalyse: X€
+Pos. 2 – Technische Trocknung (X Wochen, ${fl||'?'} m²): X€
+Pos. 3 – Feuchtemessung & Trocknungsprotokoll: X€
+Pos. 4 – Rückbau & Entsorgung: X€
+Pos. 5 – Material (Estrich, Fliesen, Putz, Farbe): X€
+Pos. 6 – Fliesen- / Estricharbeiten (${fl||'?'} m²): X€
+Pos. 7 – Malerarbeiten: X€
+Pos. 8 – Sonstige Handwerkerleistungen: X€
+Pos. 9 – Nebenkosten / Schutzmaßnahmen: X€
+────────────────────
+NETTO GESAMT: X€
+MwSt. 19%: X€
+**BRUTTO GESAMT: X€**
+Zeitrahmen Gesamtprojekt: X Wochen
+${bd?'(Budgetrahmen Kunde: '+bd+'€ – Vergleich angeben)':''}`);
+
+  if(activeM.has('f'))parts.push(`### FÖRDERUNG & VERSICHERUNG
+Versicherungsfall: ${vs}
+- Konkrete Versicherungsleistungen die geltend gemacht werden können
+- Benötigte Dokumente für die Versicherung (Protokoll, Fotos etc.)
+- KfW-Förderung 151/152 falls energetische Sanierung kombinierbar
+- BAFA falls Heiztechnik betroffen
+- Empfohlene Vorgehensweise Schritt für Schritt`);
+
+  const prompt=`Objekt: ${obj||'k.A.'} | Kunde: ${kd||'k.A.'} | Schaden: ${sch||'k.A.'} | Fläche: ${fl||'?'} m² | Versicherung: ${vs}
+${transcript?'\nSprachbeschreibung des Technikers:\n"'+transcript+'"':''}
+${photos.length?'\n'+photos.length+' Foto(s) beigefügt – bitte alle analysieren.':''}
+
+${parts.join('\n\n')}`;
+
+  try{
+    const content=[];
+    photos.slice(0,4).forEach(p=>content.push({type:'image_url',image_url:{url:'data:image/jpeg;base64,'+p.b64}}));
+    content.push({type:'text',text:prompt});
+    const r=await fetch('https://api.openai.com/v1/chat/completions',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+      body:JSON.stringify({model:'gpt-4o',max_tokens:3000,messages:[{role:'system',content:SYS},{role:'user',content}]})
+    });
+    const d=await r.json();
+    if(!r.ok){showErr('API Fehler: '+(d.error?.message||r.status));return;}
+    lastAnalysis=d.choices[0].message.content;
+    document.getElementById('rcontent').innerHTML=fmt(lastAnalysis);
+    document.getElementById('rcard').classList.add('on');
+    document.getElementById('rcard').scrollIntoView({behavior:'smooth'});
+    document.getElementById('inv-nr').value='RE-'+new Date().getFullYear()+'-'+String(Math.floor(Math.random()*999)+1).padStart(3,'0');
+  }catch(e){showErr('Fehler: '+e.message);}
+  finally{doneBtn();}
+}
+
+// ===== 3 KONZEPTE GENERIEREN – GOOGLE IMAGEN 3 =====
+async function generateKonzepte(){
+  const openaiKey = document.getElementById('apiKey').value.trim();
+  const geminiKey = document.getElementById('geminiKey').value.trim();
+  if(!geminiKey){ showErr('Bitte Google Gemini API Key eingeben (AIza...).'); return; }
+  if(!photos.length){ showErr('Bitte zuerst ein Foto hochladen.'); return; }
+
+  document.getElementById('vizBtn').disabled=true;
+  document.getElementById('ldViz').classList.add('on');
+  document.getElementById('vizResult').style.display='none';
+
+  const setStep=(n,txt)=>{
+    for(let i=1;i<=4;i++){
+      const el=document.getElementById('ks'+i);
+      el.classList.remove('active','done');
+      if(i<n){el.classList.add('done');el.textContent=el.textContent.replace('⏳','✅').replace('🔄','✅');}
+      if(i===n&&txt){el.classList.add('active');el.textContent=txt;}
+    }
+  };
+
+  // Schritt 1: Raum erkennen mit OpenAI (falls vorhanden) oder direkt weitermachen
+  setStep(1,'🔄 Raum wird analysiert...');
+  let raumDE='Raum', raumEN='bathroom';
+
+  if(openaiKey){
+    try{
+      const r1=await fetch('https://api.openai.com/v1/chat/completions',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','Authorization':'Bearer '+openaiKey},
+        body:JSON.stringify({model:'gpt-4o',max_tokens:20,messages:[{role:'user',content:[
+          {type:'image_url',image_url:{url:'data:image/jpeg;base64,'+photos[0].b64}},
+          {type:'text',text:'What type of room? ONE word: bathroom, kitchen, basement, livingroom, bedroom, hallway, garage'}
+        ]}]})
+      });
+      const d1=await r1.json();
+      if(d1.choices){
+        raumEN=d1.choices[0].message.content.trim().toLowerCase().split(/\s/)[0];
+        const map={bathroom:'Badezimmer',kitchen:'Küche',basement:'Keller',livingroom:'Wohnzimmer',bedroom:'Schlafzimmer',hallway:'Flur',garage:'Garage'};
+        raumDE=map[raumEN]||'Raum';
+      }
+    }catch(e){}
+  } else {
+    // Raum aus Schadensart ableiten
+    const sch = document.getElementById('schaden').value.toLowerCase();
+    if(sch.includes('bad')){ raumEN='bathroom'; raumDE='Badezimmer'; }
+    else if(sch.includes('keller')){ raumEN='basement'; raumDE='Keller'; }
+    else if(sch.includes('küche')){ raumEN='kitchen'; raumDE='Küche'; }
+  }
+
+  // 3 Stil-Prompts für Imagen 3
+  const stile=[
+    {
+      name:'Stil 1 – Modern & Minimalistisch',
+      sub:'Große Fliesen, Glasdusche, maximale Helligkeit',
+      preis:'Mittelklasse · ca. 8.000–15.000€',
+      prompt:`A photo of a completely renovated modern minimalist ${raumEN} in Germany. Professional interior design photography. Large format 120x60cm light grey matte porcelain wall tiles from floor to ceiling. 80x80cm light grey anti-slip floor tiles. Wall-hung white toilet. Floating white vanity with rectangular undermount sink. Frameless walk-in glass shower with chrome rainfall shower head. Large LED backlit mirror. Recessed LED spotlights in smooth white ceiling. Chrome towel rail. Very clean, bright, contemporary German interior design. No people. Photorealistic 4K.`
+    },
+    {
+      name:'Stil 2 – Elegant & Luxuriös',
+      sub:'Marmor-Optik, Spa-Atmosphäre, warmes Licht',
+      preis:'Premium · ca. 18.000–30.000€',
+      prompt:`A photo of a renovated elegant luxury ${raumEN} in Germany. Professional interior design photography. Large format marble effect white porcelain wall tiles with subtle veining. Herringbone pattern marble floor tiles. Freestanding oval white bathtub. Double floating white vanity with vessel sinks and brushed gold faucets. Large frameless mirror with warm LED strip lighting. Recessed ceiling spotlights with warm white light. Gold brass accessories and heated towel rail. Decorative plants. Luxury spa atmosphere. No people. Photorealistic 4K.`
+    },
+    {
+      name:'Stil 3 – Naturstein & Holz',
+      sub:'Travertin, Teakholz, zeitlos warm',
+      preis:'Premium Plus · ca. 22.000–38.000€',
+      prompt:`A photo of a renovated natural organic ${raumEN} in Germany. Professional interior design photography. Large format travertine-look textured wall tiles in warm beige grey. Large format warm natural stone floor tiles. Teak wood floating vanity cabinet with rectangular undermount sink. Matte black faucets and fixtures. Walk-in shower with linear drain and matching stone tiles. Round LED backlit mirror. Warm amber indirect LED lighting. Woven basket storage. Natural green plants. Organic modern design, cozy and luxurious. No people. Photorealistic 4K.`
+    }
+  ];
+
+  // Vorher-Bild anzeigen
+  document.getElementById('vorherBox').innerHTML=`
+    <img src="${photos[0].full}" alt="Vorher" />
+    <div class="vorher-lbl">📷 Vorher – ${raumDE} mit Schaden</div>`;
+
+  // Alle 3 Bilder mit Imagen 3 generieren
+  setStep(2,'🔄 Konzept 1 wird mit Imagen 3 erstellt...');
+
+  async function genImagen(prompt, stilNr){
+    setStep(stilNr+1, `🔄 Konzept ${stilNr} läuft...`);
+    // Imagen 4 via Gemini API - korrekter Endpunkt & Header
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict`;
+    const body = {
+      instances:[{ prompt }],
+      parameters:{
+        sampleCount: 1,
+        aspectRatio: '1:1'
+      }
+    };
+    const r = await fetch(url, {
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'x-goog-api-key': geminiKey
+      },
+      body: JSON.stringify(body)
+    });
+    const d = await r.json();
+    if(!r.ok) throw new Error(d.error?.message || 'Fehler Status '+r.status);
+    const b64 = d.predictions?.[0]?.bytesBase64Encoded;
+    if(!b64) throw new Error('Kein Bild zurückgegeben – Antwort: '+JSON.stringify(d));
+    const mime = d.predictions?.[0]?.mimeType || 'image/jpeg';
+    return `data:${mime};base64,${b64}`;
+  }
+
+  try{
+    // Nacheinander generieren damit Fortschritt sichtbar ist
+    const imgUrls = [];
+    for(let i=0;i<stile.length;i++){
+      setStep(i+2, `🔄 Konzept ${i+1} wird erstellt...`);
+      const url = await genImagen(stile[i].prompt, i+1);
+      imgUrls.push(url);
+      setStep(i+3);
+    }
+
+    let html='';
+    stile.forEach((s,i)=>{
+      html+=`<div class="konzept-card k${i+1}">
+        <div class="konzept-header">${s.name}</div>
+        <img src="${imgUrls[i]}" alt="Konzept ${i+1}" />
+        <div class="konzept-info">
+          <p>${s.sub}</p>
+          <div class="konzept-preis">💶 ${s.preis}</div>
+        </div>
+      </div>`;
+    });
+
+    document.getElementById('konzepteGrid').innerHTML=html;
+    document.getElementById('vizResult').style.display='block';
+
+  }catch(e){
+    showErr('Imagen 3 Fehler: '+e.message+' – Bitte Gemini API Key prüfen (ai.google.dev)');
+    console.error(e);
+  }
+  finally{
+    document.getElementById('ldViz').classList.remove('on');
+    document.getElementById('vizBtn').disabled=false;
+  }
+}
+// ===== RECHNUNG =====
+function getInv(){
+  const betrag=parseFloat(document.getElementById('inv-betrag').value)||0;
+  const netto=betrag>0?(betrag/1.19).toFixed(2):'0';
+  const mwst=betrag>0?(betrag-betrag/1.19).toFixed(2):'0';
+  const kost=lastAnalysis.match(/KOSTENSCHÄTZUNG[\s\S]*?(?=###|$)/i)?.[0]||'';
+  const kt=kost.replace(/###[^\n]*/,'').replace(/\*\*/g,'').replace(/<[^>]*>/g,'').trim()||'Sanierungsarbeiten gemäß Beauftragung';
+  return{
+    nr:document.getElementById('inv-nr').value||'RE-'+new Date().getFullYear()+'-001',
+    mail:document.getElementById('inv-mail').value,
+    betrag,netto,mwst,kt,
+    obj:document.getElementById('objekt').value||'Objekt',
+    kd:document.getElementById('kunde').value||'Kunde',
+    datum:new Date().toLocaleDateString('de-DE')
+  };
+}
+
+function previewInv(){
+  const d=getInv();
+  document.getElementById('invPrev').innerHTML=`
+    <h4 style="margin-bottom:8px">Rechnung ${d.nr}</h4>
+    <strong>Gebäudetrocknung Wiegand</strong><br>
+    Forstgasse 19a · 37269 Eschwege · Tel: 01520 88 112 88<br><br>
+    <strong>An:</strong> ${d.kd}<br>
+    <strong>Objekt:</strong> ${d.obj}<br>
+    <strong>Datum:</strong> ${d.datum}<br><br>
+    <strong>Leistungen:</strong><br>${d.kt.replace(/\n/g,'<br>')}<br><br>
+    ${d.betrag>0?`Netto: ${Number(d.netto).toLocaleString('de-DE')}€<br>MwSt. 19%: ${Number(d.mwst).toLocaleString('de-DE')}€<br><strong>Brutto gesamt: ${Number(d.betrag).toLocaleString('de-DE')}€</strong>`:''}`;
+  document.getElementById('invPrev').classList.add('on');
+}
+
+function downloadPDF(){
+  if(!window.jspdf){showErr('PDF lädt noch – kurz warten.');return;}
+  const{jsPDF}=window.jspdf;
+  const d=getInv();
+  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  const W=210,M=20;
+
+  doc.setFillColor(26,86,219);doc.rect(0,0,W,36,'F');
+  doc.setTextColor(255,255,255);
+  doc.setFontSize(17);doc.setFont('helvetica','bold');
+  doc.text('Gebäudetrocknung Wiegand',M,14);
+  doc.setFontSize(8);doc.setFont('helvetica','normal');
+  doc.text('Forstgasse 19a · 37269 Eschwege · Tel: 01520 88 112 88 · kontakt@gebaeudetrocknung-wiegand.de',M,22);
+  doc.text('Wasserschadensanierung · Gebäudetrocknung · Schimmelbehandlung · Leckageortung',M,29);
+
+  doc.setTextColor(26,86,219);
+  doc.setFontSize(20);doc.setFont('helvetica','bold');
+  doc.text('RECHNUNG',M,52);
+  doc.setFontSize(10);doc.setFont('helvetica','normal');doc.setTextColor(100,100,100);
+  doc.text('Nr: '+d.nr+'   ·   Datum: '+d.datum,M,60);
+  doc.setDrawColor(220,220,220);doc.line(M,65,W-M,65);
+
+  doc.setFillColor(249,250,251);doc.roundedRect(M,69,85,26,3,3,'F');
+  doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(100,100,100);
+  doc.text('RECHNUNGSEMPFÄNGER',M+4,77);
+  doc.setFont('helvetica','normal');doc.setFontSize(10);doc.setTextColor(31,41,55);
+  doc.text(d.kd,M+4,84);
+  doc.setFontSize(9);doc.setTextColor(100,100,100);
+  doc.text('Objekt: '+d.obj,M+4,91);
+
+  let y=108;
+  doc.setFillColor(26,86,219);doc.rect(M,y-6,W-2*M,8,'F');
+  doc.setTextColor(255,255,255);doc.setFontSize(9);doc.setFont('helvetica','bold');
+  doc.text('LEISTUNGSBESCHREIBUNG',M+3,y-0.5);
+  y+=6;
+  doc.setTextColor(55,65,81);doc.setFont('helvetica','normal');doc.setFontSize(9);
+  const lines=doc.splitTextToSize(d.kt,W-2*M-4);
+  lines.slice(0,26).forEach(line=>{
+    if(y>228)return;
+    const bold=/^(Pos\.|NETTO|MwSt|BRUTTO|Gesamt|────)/.test(line);
+    doc.setFont('helvetica',bold?'bold':'normal');
+    doc.setTextColor(bold?26:55,bold?86:65,bold?219:81);
+    doc.text(line,M+2,y);y+=5.5;
+  });
+
+  if(d.betrag>0){
+    y=Math.max(y+4,222);
+    doc.setFillColor(235,245,255);doc.roundedRect(W-M-75,y,75,28,3,3,'F');
+    doc.setTextColor(100,100,100);doc.setFontSize(9);doc.setFont('helvetica','normal');
+    doc.text('Netto:',W-M-71,y+8);
+    doc.text(Number(d.netto).toLocaleString('de-DE')+' €',W-M-4,y+8,{align:'right'});
+    doc.text('MwSt. 19%:',W-M-71,y+15);
+    doc.text(Number(d.mwst).toLocaleString('de-DE')+' €',W-M-4,y+15,{align:'right'});
+    doc.setFillColor(26,86,219);doc.roundedRect(W-M-75,y+19,75,9,2,2,'F');
+    doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(10);
+    doc.text('GESAMT BRUTTO:',W-M-71,y+25);
+    doc.text(Number(d.betrag).toLocaleString('de-DE')+' €',W-M-4,y+25,{align:'right'});
+  }
+
+  doc.setFillColor(240,253,244);doc.roundedRect(M,252,W-2*M,14,3,3,'F');
+  doc.setTextColor(5,150,105);doc.setFontSize(8);doc.setFont('helvetica','bold');
+  doc.text('ZAHLUNGSBEDINGUNGEN',M+4,259);
+  doc.setFont('helvetica','normal');doc.setTextColor(55,65,81);
+  doc.text('Zahlbar innerhalb von 14 Tagen ohne Abzug nach Rechnungseingang.',M+4,264);
+
+  doc.setFillColor(26,86,219);doc.rect(0,280,W,17,'F');
+  doc.setTextColor(255,255,255);doc.setFontSize(8);doc.setFont('helvetica','normal');
+  doc.text('Werner Wiegand & Rayk Wiegand · Gebäudetrocknung Wiegand · Forstgasse 19a, 37269 Eschwege',W/2,287,{align:'center'});
+  doc.text('Tel: 01520 88 112 88 · kontakt@gebaeudetrocknung-wiegand.de · www.gebaeudetrocknung-wiegand.de',W/2,293,{align:'center'});
+
+  doc.save('Rechnung_'+d.nr+'_Wiegand.pdf');
+  document.getElementById('invStatus').innerHTML='<span style="color:var(--green);font-weight:600">✅ PDF gespeichert!</span>';
+}
+
+function sendInv(){
+  const d=getInv();
+  if(!d.mail){showErr('Bitte Kunden-E-Mail eingeben.');return;}
+  const body=`Sehr geehrte/r ${d.kd},\n\nanbei Ihre Rechnung für die Sanierungsarbeiten.\n\nRechnungsnummer: ${d.nr}\nDatum: ${d.datum}\nObjekt: ${d.obj}\n\nLEISTUNGEN:\n${d.kt}\n\n${d.betrag>0?'Netto: '+Number(d.netto).toLocaleString('de-DE')+'€\nMwSt. 19%: '+Number(d.mwst).toLocaleString('de-DE')+'€\nGESAMT BRUTTO: '+Number(d.betrag).toLocaleString('de-DE')+'€\n\n':''}Zahlbar innerhalb von 14 Tagen.\n\nMit freundlichen Grüßen\nWerner & Rayk Wiegand\nGebäudetrocknung Wiegand · Tel: 01520 88 112 88`;
+  window.location.href='mailto:'+d.mail+'?subject='+encodeURIComponent('Rechnung '+d.nr+' – Gebäudetrocknung Wiegand')+'&body='+encodeURIComponent(body);
+  document.getElementById('invStatus').innerHTML='<span style="color:var(--green);font-weight:600">✅ E-Mail geöffnet für '+d.mail+'</span>';
+}
+
+// ===== HELPERS =====
+function fmt(t){
+  return t.replace(/### (.+)/g,'<h3>$1</h3>').replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>');
+}
+function showErr(msg){
+  const el=document.getElementById('err');
+  el.textContent='❌ '+msg;el.className='err on';
+  setTimeout(()=>el.className='err',7000);
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function doneBtn(){
+  document.getElementById('analyzeBtn').disabled=false;
+  document.getElementById('loading').classList.remove('on');
+}
 </script>
+</body>
+</html>
