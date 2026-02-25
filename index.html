@@ -158,7 +158,6 @@ body{font-family:'Inter',sans-serif;background:var(--gray-50);color:var(--gray-8
   .audio-card{flex-direction:column;}
 }
 </style>
-<script src="https://cdn.jsdelivr.net/npm/@fal-ai/client/dist/index.umd.js"></script>
 </head>
 <body>
 
@@ -171,8 +170,8 @@ body{font-family:'Inter',sans-serif;background:var(--gray-50);color:var(--gray-8
     </div>
   </div>
   <div class="header-right">
-    <span class="api-label">🔑 Gemini Key</span>
-    <input class="api-input" type="password" id="apiKey" placeholder="AIza..." />
+    <span class="api-label">🔑 OpenAI Key</span>
+    <input class="api-input" type="password" id="apiKey" placeholder="sk-proj-..." />
   </div>
 </div>
 
@@ -259,12 +258,12 @@ body{font-family:'Inter',sans-serif;background:var(--gray-50);color:var(--gray-8
       <div class="mchip on" id="m-kosten" onclick="toggleM('kosten')"><span class="mi"></span>Kostenschätzung</div>
       <div class="mchip on" id="m-foerder" onclick="toggleM('foerder')"><span class="mi"></span>Förderung & Versicherung</div>
     </div>
-    <button class="btn btn-p btn-full" id="analyzeBtn" onclick="runAnalyse()"> KI-Analyse starten</button>
+    <button class="btn btn-p btn-full" id="analyzeBtn" onclick="runAnalyse()"> KI-Analyse starten (OpenAI)</button>
   </div>
 
   <div class="loading" id="loading">
     <div class="spinner"></div>
-    <p id="ldText">Analysiere... <span>Bitte warten</span></p>
+    <p id="ldText">Analysiere mit GPT-4o... <span>Bitte warten</span></p>
     <div class="loading-steps">
       <div class="step" id="step1">⏳ Sprache transkribieren</div>
       <div class="step" id="step2">⏳ Fotos analysieren</div>
@@ -286,7 +285,7 @@ body{font-family:'Inter',sans-serif;background:var(--gray-50);color:var(--gray-8
       <div class="viz-hdr">
         <div class="viz-hdr-text">
           <h3>🪄 KI-Visualisierung: Raum-Sanierung</h3>
-          <p>KI behält die Raumstruktur (Fenster/Türen) exakt bei und rendert einen modernen "Nachher"-Vorschlag.</p>
+          <p>DALL-E 3 generiert einen modernen "Nachher"-Vorschlag basierend auf dem Schadensbild.</p>
         </div>
         <button class="btn btn-p" id="vizBtn" onclick="generateViz()">✨ Vorschau generieren</button>
       </div>
@@ -321,18 +320,14 @@ body{font-family:'Inter',sans-serif;background:var(--gray-50);color:var(--gray-8
 // ===== SYSTEM PROMPT =====
 const SYS = `Du bist der KI-Assistent der Firma Gebäudetrocknung Wiegand, Forstgasse 19a, 37269 Eschwege.
 Tel: 01520 88 112 88 · E-Mail: kontakt@gebaeudetrocknung-wiegand.de
-Geschäftsführer: Werner Wiegand & Rayk Wiegand
 
 LEISTUNGEN:
-- Leckageortung & Schadensanalyse mit modernster Technik
-- Wasserschadensanierung (Rohrbruch, Überschwemmung, Leckage)
-- Bautrocknung: Kondensationstrockner, Adsorptionstrockner, Infrarotheizung
-- Feuchtemessung: CM-Messung, elektrische Widerstandsmessung
-- Schimmelbehandlung: Neutralisation, Desinfektion, Biozide
-- Dokumentation & Trocknungsprotokoll für Versicherungen
-- Versicherungskommunikation & Schadensabwicklung
+- Leckageortung & Schadensanalyse
+- Wasserschadensanierung
+- Bautrocknung
+- Schimmelbehandlung
 
-Erstelle immer präzise, professionelle, praxisnahe Analysen auf Deutsch mit realistischen Preisen für die Region Hessen/Nordhessen.`;
+Erstelle immer präzise, professionelle, praxisnahe Analysen auf Deutsch mit realistischen Preisen für die Region Hessen.`;
 
 // ===== STATE =====
 let photos = []; // [{base64, name}]
@@ -437,12 +432,12 @@ function setStep(n, status) {
   }
 }
 
-// ===== ANALYSE =====
+// ===== OPENAI ANALYSE (GPT-4o) =====
 async function runAnalyse() {
   const key = document.getElementById('apiKey').value.trim();
   document.getElementById('errBar').className = 'err-bar';
-  if (!key) { showErr('Bitte Gemini API Key eingeben.'); return; }
-  if (!photos.length && !audBlob) { showErr('Bitte mindestens ein Foto hochladen oder Sprachaufnahme machen.'); return; }
+  if (!key || !key.startsWith('sk-')) { showErr('Bitte gültigen OpenAI API Key (sk-...) eingeben.'); return; }
+  if (!photos.length && !audBlob) { showErr('Bitte mindestens ein Foto hochladen.'); return; }
 
   document.getElementById('analyzeBtn').disabled = true;
   document.getElementById('loading').style.display = 'block';
@@ -455,9 +450,7 @@ async function runAnalyse() {
   const budget = document.getElementById('budget')?.value || '';
   const checks = Array.from(document.querySelectorAll('.mchip.on')).map(b => b.innerText).join(', ') || 'Allgemeine Analyse';
 
-  const parts = [];
-
-  parts.push({ text: `Du bist ein erfahrener Gutachter für Gebäudeschäden bei Gebäudetrocknung Wiegand in Eschwege.
+  const promptText = `Du bist ein erfahrener Gutachter für Gebäudeschäden bei Gebäudetrocknung Wiegand in Eschwege.
 Analysiere den Wasserschaden anhand der Fotos und erstelle einen professionellen deutschen Bericht.
 
 Objektdaten:
@@ -476,28 +469,39 @@ Erstelle einen strukturierten Bericht mit:
 ### Kostenschätzung
 ### Fördermöglichkeiten
 
-Antworte auf Deutsch, professionell und detailliert.` });
+Antworte auf Deutsch, professionell und detailliert. Nutze das System-Wissen von Wiegand Trocknung.`;
 
+  // Payload für OpenAI Vision
+  const contentArray = [{ type: "text", text: promptText }];
   for (let i = 0; i < Math.min(photos.length, 4); i++) {
-    parts.push({ inline_data: { mime_type: 'image/jpeg', data: photos[i].base64 } });
+    contentArray.push({
+      type: "image_url",
+      image_url: { url: `data:image/jpeg;base64,${photos[i].base64}` }
+    });
   }
 
   try {
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ role: 'user', parts }],
-          generationConfig: { temperature: 0.4, maxOutputTokens: 2048 }
-        })
-      }
-    );
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${key}`
+      },
+      body: JSON.stringify({
+        model: "gpt-4o",
+        messages: [
+          { role: "system", content: SYS },
+          { role: "user", content: contentArray }
+        ],
+        temperature: 0.4,
+        max_tokens: 2000
+      })
+    });
+    
     const data = await response.json();
     if (!response.ok) throw new Error(data.error?.message || response.status);
 
-    const text = data.candidates[0].content.parts[0].text;
+    const text = data.choices[0].message.content;
     lastAnalysis = text;
 
     const html = text
@@ -520,51 +524,57 @@ Antworte auf Deutsch, professionell und detailliert.` });
   document.getElementById('analyzeBtn').disabled = false;
 }
 
-// ===== NEUE NANO BANANA VISUALISIERUNG MIT SLIDER =====
+// ===== OPENAI VISUALISIERUNG (DALL-E 3) =====
 async function generateViz() {
   const key = document.getElementById('apiKey').value.trim();
-  if (!key) { showErr('Bitte Gemini API Key eingeben (AIza...).'); return; }
+  if (!key || !key.startsWith('sk-')) { showErr('Bitte gültigen OpenAI API Key (sk-...) eingeben.'); return; }
   if (!photos.length) { showErr('Bitte zuerst ein Foto hochladen.'); return; }
 
   document.getElementById('vizBtn').disabled = true;
   document.getElementById('ldViz').classList.add('on');
-  document.getElementById('ldViz').innerHTML = '<div class="spinner"></div><p>Raumstruktur wird beibehalten & saniert... <span>Bitte warten (~15s)</span></p>';
+  document.getElementById('ldViz').innerHTML = '<div class="spinner"></div><p>DALL-E 3 generiert den sanierten Raum... <span>Bitte warten (~15s)</span></p>';
   document.getElementById('vizResult').style.display = 'none';
 
   try {
-    // 1. Raumtyp schnell erkennen (optionaler Step zur Prompt-Verbesserung)
-    let raum = 'room';
+    // 1. Zuerst GPT-4o nutzen, um das Bild zu beschreiben, damit DALL-E 3 weiß, was es zeichnen soll
+    let raumBeschreibung = "modern interior room";
     try {
-      const r1 = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`, {
+      const gptRes = await fetch("https://api.openai.com/v1/chat/completions", {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contents: [{ role: 'user', parts: [
-          { inline_data: { mime_type: 'image/jpeg', data: photos[0].base64 } },
-          { text: 'Translate the type of room in this picture to English (e.g. bathroom, basement, living room). Reply with just ONE word.' }
-        ]}]})
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
+        body: JSON.stringify({
+          model: "gpt-4o-mini",
+          messages: [{
+            role: "user",
+            content: [
+              { type: "text", text: "Beschreibe kurz die Art des Raumes auf dem Bild (z.B. Badezimmer mit Fenster rechts) auf Englisch, für einen Bild-Prompt." },
+              { type: "image_url", image_url: { url: `data:image/jpeg;base64,${photos[0].base64}` } }
+            ]
+          }]
+        })
       });
-      const d1 = await r1.json();
-      if (d1.candidates) raum = d1.candidates[0].content.parts[0].text.trim().split(' ')[0];
-    } catch(e) { console.log("Raumerkennung übersprungen"); }
+      const gptData = await gptRes.json();
+      if (gptData.choices) raumBeschreibung = gptData.choices[0].message.content.trim();
+    } catch(e) { console.log("Raumbeschreibung übersprungen"); }
 
-    // 2. Nano Banana API für die Vorher/Nachher Komposition aufrufen
-    const architectPrompt = `A professional architectural photo of a perfectly renovated interior ${raum}. Clean, freshly plastered walls, modern flooring, flawless condition, soft volumetric lighting, highly detailed, photorealistic, 4k resolution. No water damage, no mold, no dirt.`;
+    // 2. DALL-E 3 API aufrufen
+    const architectPrompt = `A photorealistic, highly detailed 4k architectural photo of a perfectly renovated interior. Clean, freshly plastered walls, modern flooring, flawless condition, soft volumetric lighting. It is a ${raumBeschreibung}. No water damage, no mold, no dirt, bright and clean.`;
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/nano-banana:generateImage?key=${key}`, {
+    const response = await fetch("https://api.openai.com/v1/images/generations", {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
       body: JSON.stringify({
+        model: "dall-e-3",
         prompt: architectPrompt,
-        source_image: photos[0].base64, // Dein kaputtes Foto als Gerüst
-        edit_mode: "composition" // Zwingt die KI, die Wände exakt beizubehalten
+        n: 1,
+        size: "1024x1024"
       })
     });
     
     const data = await response.json();
     if (!response.ok) throw new Error(data.error?.message || "Fehler bei der Bildgenerierung");
     
-    // Fallback: Falls die API das Bild als Base64 oder URL liefert
-    const imgSrc = data.images && data.images[0].url ? data.images[0].url : `data:image/jpeg;base64,${data.images[0].base64}`;
+    const imgSrc = data.data[0].url;
 
     // 3. Den interaktiven Slider ins HTML einbauen
     const grid = document.getElementById('vizGrid');
