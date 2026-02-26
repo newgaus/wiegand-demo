@@ -128,7 +128,7 @@ body{font-family:'Inter',sans-serif;background:var(--gray-50);color:var(--gray-8
 .viz-hdr{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;}
 .viz-hdr-text h3{font-size:14px;font-weight:700;color:var(--blue-dark);margin-bottom:3px;}
 .viz-hdr-text p{font-size:11px;color:var(--gray-500);}
-.viz-grid{display:grid;grid-template-columns:1fr; gap:14px;margin-top:12px;}
+.viz-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin-top:12px;}
 .viz-item{text-align:center;}
 .viz-item img{width:100%;border-radius:10px;border:1px solid var(--gray-200);box-shadow:var(--shadow-md);}
 .viz-item p{font-size:10px;color:var(--gray-400);margin-top:5px;text-transform:uppercase;letter-spacing:.05em;}
@@ -171,7 +171,7 @@ body{font-family:'Inter',sans-serif;background:var(--gray-50);color:var(--gray-8
   </div>
   <div class="header-right">
     <span class="api-label">🔑 OpenAI Key</span>
-    <input class="api-input" type="password" id="apiKey" placeholder="sk-proj-..." />
+    <input class="api-input" type="password" id="openaiKey" placeholder="sk-..." />
   </div>
 </div>
 
@@ -258,12 +258,12 @@ body{font-family:'Inter',sans-serif;background:var(--gray-50);color:var(--gray-8
       <div class="mchip on" id="m-kosten" onclick="toggleM('kosten')"><span class="mi"></span>Kostenschätzung</div>
       <div class="mchip on" id="m-foerder" onclick="toggleM('foerder')"><span class="mi"></span>Förderung & Versicherung</div>
     </div>
-    <button class="btn btn-p btn-full" id="analyzeBtn" onclick="runAnalyse()"> KI-Analyse starten (OpenAI)</button>
+    <button class="btn btn-p btn-full" id="analyzeBtn" onclick="runAnalyse()"> KI-Analyse starten</button>
   </div>
 
   <div class="loading" id="loading">
     <div class="spinner"></div>
-    <p id="ldText">Analysiere mit GPT-4o... <span>Bitte warten</span></p>
+    <p id="ldText">Analysiere... <span>Bitte warten</span></p>
     <div class="loading-steps">
       <div class="step" id="step1">⏳ Sprache transkribieren</div>
       <div class="step" id="step2">⏳ Fotos analysieren</div>
@@ -284,16 +284,18 @@ body{font-family:'Inter',sans-serif;background:var(--gray-50);color:var(--gray-8
     <div class="viz-wrap" id="vizWrap">
       <div class="viz-hdr">
         <div class="viz-hdr-text">
-          <h3>🪄 KI-Visualisierung: Raum-Sanierung</h3>
-          <p>DALL-E 3 generiert einen modernen "Nachher"-Vorschlag basierend auf dem Schadensbild.</p>
+          <h3> KI-Visualisierung: Sanierter Raum</h3>
+          <p>KI erkennt Raumtyp und erstellt realistischen 3D-Nachher-Vorschlag in gleicher Raumgröße</p>
         </div>
-        <button class="btn btn-p" id="vizBtn" onclick="generateViz()">✨ Vorschau generieren</button>
+        <button class="btn btn-p" id="vizBtn" onclick="generateViz()">✨ 3D erstellen</button>
       </div>
       <div class="loading" id="ldViz" style="padding:20px">
-        </div>
+        <div class="spinner"></div>
+        <p>Raum wird erkannt & Visualisierung erstellt... <span>Bitte warten (~30s)</span></p>
+      </div>
       <div id="vizResult" style="display:none">
         <div class="viz-grid" id="vizGrid"></div>
-        <p style="font-size:11px;color:var(--gray-400);margin-top:10px;text-align:center">Ziehe den Schieberegler, um das Vorher-Nachher Ergebnis zu vergleichen.</p>
+        <p style="font-size:11px;color:var(--gray-400);margin-top:10px;text-align:center"> KI-Vorschlag basierend auf Ihrem Foto – gleicher Raum, saniert und modernisiert</p>
       </div>
     </div>
 
@@ -317,26 +319,13 @@ body{font-family:'Inter',sans-serif;background:var(--gray-50);color:var(--gray-8
 </div>
 
 <script>
-// ===== SYSTEM PROMPT =====
-const SYS = `Du bist der KI-Assistent der Firma Gebäudetrocknung Wiegand, Forstgasse 19a, 37269 Eschwege.
-Tel: 01520 88 112 88 · E-Mail: kontakt@gebaeudetrocknung-wiegand.de
-
-LEISTUNGEN:
-- Leckageortung & Schadensanalyse
-- Wasserschadensanierung
-- Bautrocknung
-- Schimmelbehandlung
-
-Erstelle immer präzise, professionelle, praxisnahe Analysen auf Deutsch mit realistischen Preisen für die Region Hessen.`;
-
 // ===== STATE =====
-let photos = []; // [{base64, name}]
+let photos = []; 
 let audBlob = null, isRec = false;
 let mRec = null, aChunks = [];
 let timerInterval = null, recSeconds = 0;
 let modes = new Set(['schaden','konzept','kosten','foerder']);
 let lastAnalysis = '';
-let kostensection = '';
 
 // ===== MULTI FOTO =====
 function handleFiles(input) {
@@ -378,10 +367,8 @@ async function toggleRec() {
   if (!isRec) {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
-        ? 'audio/webm;codecs=opus'
-        : MediaRecorder.isTypeSupported('audio/mp4') ? 'audio/mp4' : 'audio/webm';
-      mRec = new MediaRecorder(stream, { mimeType, audioBitsPerSecond: 128000 });
+      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' : 'audio/webm';
+      mRec = new MediaRecorder(stream, { mimeType });
       aChunks = [];
       mRec.ondataavailable = e => { if (e.data.size > 0) aChunks.push(e.data); };
       mRec.onstop = () => {
@@ -405,7 +392,7 @@ async function toggleRec() {
         document.getElementById('recTimer').textContent = `${m}:${String(s).padStart(2,'0')}`;
         document.getElementById('progressFill').style.width = Math.min((recSeconds/120)*100, 100) + '%';
       }, 1000);
-    } catch(e) { showErr('Mikrofon-Zugriff verweigert. Bitte in den Browser-Einstellungen erlauben.'); }
+    } catch(e) { showErr('Mikrofon-Zugriff verweigert.'); }
   } else {
     mRec.stop(); isRec = false;
     clearInterval(timerInterval);
@@ -423,277 +410,138 @@ function toggleM(m) {
   else { modes.add(m); el.classList.add('on'); }
 }
 
-function setStep(n, status) {
-  for (let i = 1; i <= 4; i++) {
-    const el = document.getElementById('step'+i);
-    el.classList.remove('active','done');
-    if (i < n) el.classList.add('done'), el.textContent = el.textContent.replace('⏳','✅');
-    if (i === n) { el.classList.add('active'); status && (el.textContent = status); }
-  }
-}
-
-// ===== OPENAI ANALYSE (GPT-4o) =====
+// ===== ANALYSE =====
 async function runAnalyse() {
-  const key = document.getElementById('apiKey').value.trim();
-  document.getElementById('errBar').className = 'err-bar';
-  if (!key || !key.startsWith('sk-')) { showErr('Bitte gültigen OpenAI API Key (sk-...) eingeben.'); return; }
-  if (!photos.length && !audBlob) { showErr('Bitte mindestens ein Foto hochladen.'); return; }
+  const key = document.getElementById('openaiKey').value.trim();
+  if (!key) { showErr('Bitte OpenAI API Key eingeben.'); return; }
+  if (!photos.length && !audBlob) { showErr('Bitte mindestens ein Foto oder Sprachaufnahme bereitstellen.'); return; }
 
   document.getElementById('analyzeBtn').disabled = true;
   document.getElementById('loading').style.display = 'block';
   document.getElementById('resultCard').style.display = 'none';
 
-  const kunde  = document.getElementById('auftraggeber')?.value || '';
-  const obj    = document.getElementById('objekt')?.value || '';
-  const flaeche= document.getElementById('flaeche')?.value || '';
-  const vers   = document.getElementById('versicherung')?.value || 'Keine Angabe';
-  const budget = document.getElementById('budget')?.value || '';
-  const checks = Array.from(document.querySelectorAll('.mchip.on')).map(b => b.innerText).join(', ') || 'Allgemeine Analyse';
+  const kunde = document.getElementById('auftraggeber').value || '';
+  const obj = document.getElementById('objekt').value || '';
+  
+  const content_parts = [
+    { type: 'text', text: `Analysiere diesen Gebäudeschaden für Gebäudetrocknung Wiegand. Kunde: ${kunde}, Objekt: ${obj}. Erstelle Schadensbeschreibung, Ursache, Sofortmaßnahmen, Sanierungskonzept und Kostenschätzung.` }
+  ];
 
-  const promptText = `Du bist ein erfahrener Gutachter für Gebäudeschäden bei Gebäudetrocknung Wiegand in Eschwege.
-Analysiere den Wasserschaden anhand der Fotos und erstelle einen professionellen deutschen Bericht.
-
-Objektdaten:
-Kunde: ${kunde || 'nicht angegeben'}
-Objekt: ${obj || 'nicht angegeben'}
-Betroffene Fläche: ${flaeche || '?'} m²
-Versicherung: ${vers}
-${budget ? 'Budgetrahmen: ' + budget + '€' : ''}
-Gewünschte Analyse: ${checks}
-
-Erstelle einen strukturierten Bericht mit:
-### Schadensbeschreibung
-### Ursachenanalyse
-### Sofortmaßnahmen
-### Sanierungskonzept
-### Kostenschätzung
-### Fördermöglichkeiten
-
-Antworte auf Deutsch, professionell und detailliert. Nutze das System-Wissen von Wiegand Trocknung.`;
-
-  // Payload für OpenAI Vision
-  const contentArray = [{ type: "text", text: promptText }];
   for (let i = 0; i < Math.min(photos.length, 4); i++) {
-    contentArray.push({
-      type: "image_url",
-      image_url: { url: `data:image/jpeg;base64,${photos[i].base64}` }
-    });
+    content_parts.push({ type: 'image_url', image_url: { url: 'data:image/jpeg;base64,' + photos[i].base64 } });
   }
 
   try {
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${key}`
-      },
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
       body: JSON.stringify({
-        model: "gpt-4o",
-        messages: [
-          { role: "system", content: SYS },
-          { role: "user", content: contentArray }
-        ],
-        temperature: 0.4,
-        max_tokens: 2000
+        model: 'gpt-4o',
+        messages: [{ role: 'user', content: content_parts }]
       })
     });
-    
     const data = await response.json();
-    if (!response.ok) throw new Error(data.error?.message || response.status);
+    if (!response.ok) throw new Error(data.error?.message || 'API Fehler');
 
-    const text = data.choices[0].message.content;
-    lastAnalysis = text;
-
-    const html = text
+    lastAnalysis = data.choices[0].message.content;
+    document.getElementById('resultContent').innerHTML = lastAnalysis
       .replace(/### (.+)/g, '<h3>$1</h3>')
-      .replace(/[*][*](.+?)[*][*]/g, '<strong>$1</strong>')
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
       .replace(/\n/g, '<br>');
 
-    document.getElementById('resultContent').innerHTML = html;
     document.getElementById('resultCard').style.display = 'block';
     document.getElementById('resultCard').scrollIntoView({behavior:'smooth'});
-
-    const kostenMatch = text.match(/Kostenschätzung[\s\S]*?(?=###|$)/i);
-    if (kostenMatch) kostensection = kostenMatch[0];
-
-  } catch(e) {
-    showErr('Analyse-Fehler: ' + e.message);
-  }
+  } catch(e) { showErr('Analyse-Fehler: ' + e.message); }
 
   document.getElementById('loading').style.display = 'none';
   document.getElementById('analyzeBtn').disabled = false;
 }
 
-// ===== OPENAI VISUALISIERUNG (DALL-E 3) =====
+// ===== DALL-E 3 VISUALISIERUNG =====
 async function generateViz() {
-  const key = document.getElementById('apiKey').value.trim();
-  if (!key || !key.startsWith('sk-')) { showErr('Bitte gültigen OpenAI API Key (sk-...) eingeben.'); return; }
+  const key = document.getElementById('openaiKey').value.trim();
+  if (!key) { showErr('Bitte OpenAI Key eingeben.'); return; }
   if (!photos.length) { showErr('Bitte zuerst ein Foto hochladen.'); return; }
 
   document.getElementById('vizBtn').disabled = true;
-  document.getElementById('ldViz').classList.add('on');
-  document.getElementById('ldViz').innerHTML = '<div class="spinner"></div><p>DALL-E 3 generiert den sanierten Raum... <span>Bitte warten (~15s)</span></p>';
+  document.getElementById('ldViz').style.display = 'block';
   document.getElementById('vizResult').style.display = 'none';
 
+  let raum = 'Raum';
   try {
-    // 1. Zuerst GPT-4o nutzen, um das Bild zu beschreiben, damit DALL-E 3 weiß, was es zeichnen soll
-    let raumBeschreibung = "modern interior room";
-    try {
-      const gptRes = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
-        body: JSON.stringify({
-          model: "gpt-4o-mini",
-          messages: [{
-            role: "user",
-            content: [
-              { type: "text", text: "Beschreibe kurz die Art des Raumes auf dem Bild (z.B. Badezimmer mit Fenster rechts) auf Englisch, für einen Bild-Prompt." },
-              { type: "image_url", image_url: { url: `data:image/jpeg;base64,${photos[0].base64}` } }
-            ]
-          }]
-        })
-      });
-      const gptData = await gptRes.json();
-      if (gptData.choices) raumBeschreibung = gptData.choices[0].message.content.trim();
-    } catch(e) { console.log("Raumbeschreibung übersprungen"); }
-
-    // 2. DALL-E 3 API aufrufen
-    const architectPrompt = `A photorealistic, highly detailed 4k architectural photo of a perfectly renovated interior. Clean, freshly plastered walls, modern flooring, flawless condition, soft volumetric lighting. It is a ${raumBeschreibung}. No water damage, no mold, no dirt, bright and clean.`;
-
-    const response = await fetch("https://api.openai.com/v1/images/generations", {
+    const r1 = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
-      body: JSON.stringify({
-        model: "dall-e-3",
-        prompt: architectPrompt,
-        n: 1,
-        size: "1024x1024"
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+      body: JSON.stringify({ 
+        model: 'gpt-4o', 
+        max_tokens: 10, 
+        messages: [{ role: 'user', content: [
+          { type: 'image_url', image_url: { url: 'data:image/jpeg;base64,' + photos[0].base64 } },
+          { type: 'text', text: 'Welcher Raumtyp ist das? Antworte mit nur einem Wort (z.B. Badezimmer, Keller, Wohnzimmer).' }
+        ]}]
       })
     });
-    
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.error?.message || "Fehler bei der Bildgenerierung");
-    
-    const imgSrc = data.data[0].url;
+    const d1 = await r1.json();
+    if (d1.choices) raum = d1.choices[0].message.content.trim();
+  } catch(e) { console.error("Raumerkennung fehlgeschlagen", e); }
 
-    // 3. Den interaktiven Slider ins HTML einbauen
+  try {
+    const prompt = `Eine hochprofessionelle, fotorealistische 3D-Architektur-Visualisierung im isometrischen Cutaway-Stil eines komplett sanierten und modernisierten ${raum}. Der Raum wirkt luxuriös, hell und sauber. Modernes Design, hochwertige Materialien (Fliesen, Holz, LED-Beleuchtung). Keine Schäden sichtbar. Es ist eine Vorher-Nachher-Gegenüberstellung im Stil einer Immobilien-Präsentation.`;
+
+    const response = await fetch('https://api.openai.com/v1/images/generations', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+      body: JSON.stringify({
+        model: 'dall-e-3',
+        prompt: prompt,
+        n: 1,
+        size: '1024x1024',
+        quality: 'hd'
+      })
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error?.message || 'DALL-E Fehler');
+
+    const imgSrc = data.data[0].url;
     const grid = document.getElementById('vizGrid');
     grid.innerHTML = `
-      <div style="grid-column: 1 / -1; margin-top: 10px;">
-        <div style="position:relative; width:100%; max-width:800px; margin:0 auto; border-radius:12px; overflow:hidden; box-shadow:0 10px 30px rgba(0,0,0,0.15); height: 400px; background:#000;">
-          
-          <img src="${imgSrc}" id="afterImg" style="position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; z-index:1;" alt="Saniert">
-          
-          <img src="${photos[0].full}" id="beforeImg" style="position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; z-index:2; clip-path:polygon(0 0, 50% 0, 50% 100%, 0 100%);" alt="Wasserschaden">
-
-          <div id="sliderLine" style="position:absolute; top:0; left:50%; width:4px; height:100%; background:white; z-index:2; pointer-events:none; box-shadow:0 0 10px rgba(0,0,0,0.5);"></div>
-          <div id="sliderBtn" style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); width:36px; height:36px; background:white; border-radius:50%; z-index:2; pointer-events:none; box-shadow:0 0 10px rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; font-size:12px; color:#1a56db; font-weight:bold;">◄►</div>
-
-          <input type="range" min="0" max="100" value="50" oninput="
-            document.getElementById('beforeImg').style.clipPath = 'polygon(0 0, ' + this.value + '% 0, ' + this.value + '% 100%, 0 100%)';
-            document.getElementById('sliderLine').style.left = this.value + '%';
-            document.getElementById('sliderBtn').style.left = this.value + '%';
-          " style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:3; opacity:0; cursor:ew-resize;">
-          
-        </div>
-      </div>
-    `;
+      <div class="viz-item"><img src="${photos[0].full}" alt="Vorher"/><p>📷 IST-Zustand (Schaden)</p></div>
+      <div class="viz-item"><img src="${imgSrc}" alt="Nachher"/><p>✨ KI-Sanierungsvorschlag (${raum})</p></div>`;
     
     document.getElementById('vizResult').style.display = 'block';
     document.getElementById('vizResult').scrollIntoView({behavior:'smooth'});
+  } catch(e) { showErr('Visualisierung Fehler: ' + e.message); }
 
-  } catch(e) {
-    showErr('Visualisierung Fehler: ' + e.message);
-  }
-
-  document.getElementById('ldViz').classList.remove('on');
+  document.getElementById('ldViz').style.display = 'none';
   document.getElementById('vizBtn').disabled = false;
 }
 
-// ===== RECHNUNG =====
+// ===== RECHNUNG & HELPERS =====
 function previewInvoice() {
-  const email = document.getElementById('inv-email').value;
   const nr = document.getElementById('inv-nr').value || 'RE-2024-001';
-  const betrag = document.getElementById('inv-betrag').value;
-  const obj = document.getElementById('objekt').value || 'Objekt';
-  const kunde = document.getElementById('auftraggeber').value || 'Kunde';
-  const datum = new Date().toLocaleDateString('de-DE');
-
-  const html = `<h4>Rechnung ${nr}</h4>
-<strong>Gebäudetrocknung Wiegand</strong><br>
-Forstgasse 19a · 37269 Eschwege<br>
-Tel: 01520 88 112 88 · kontakt@gebaeudetrocknung-wiegand.de<br><br>
-<strong>An:</strong> ${kunde}<br>
-<strong>Objekt:</strong> ${obj}<br>
-<strong>Datum:</strong> ${datum}<br>
-<strong>Rechnungsnummer:</strong> ${nr}<br><br>
-<strong>Leistungsbeschreibung:</strong><br>
-${kostensection.trim() || 'Wasserschadensanierung gemäß Angebot und Beauftragung'}<br><br>
-${betrag ? `<strong>Gesamtbetrag brutto (inkl. 19% MwSt.): ${Number(betrag).toLocaleString('de-DE')}€</strong>` : ''}<br><br>
-Zahlbar innerhalb von 14 Tagen ohne Abzug.<br>
-Bankverbindung: auf Anfrage<br><br>
-Mit freundlichen Grüßen,<br>
-<strong>Werner Wiegand & Rayk Wiegand</strong><br>
-Gebäudetrocknung Wiegand`;
-
+  const betrag = document.getElementById('inv-betrag').value || '0';
+  const html = `<h4>Vorschau: Rechnung ${nr}</h4><p>Betrag: ${betrag}€</p><p>Empfänger: ${document.getElementById('inv-email').value}</p>`;
   document.getElementById('invoicePreview').innerHTML = html;
   document.getElementById('invoicePreview').classList.add('on');
 }
 
 function sendInvoice() {
   const email = document.getElementById('inv-email').value;
-  if (!email) { showErr('Bitte E-Mail-Adresse des Kunden eingeben.'); return; }
-
-  const nr = document.getElementById('inv-nr').value || 'RE-2024-001';
-  const betrag = document.getElementById('inv-betrag').value;
-  const obj = document.getElementById('objekt').value || 'Objekt';
-  const kunde = document.getElementById('auftraggeber').value || 'Kunde';
-  const datum = new Date().toLocaleDateString('de-DE');
-
-  const body = `Sehr geehrte/r ${kunde},
-
-anbei erhalten Sie Ihre Rechnung für die durchgeführten Arbeiten.
-
-Rechnungsnummer: ${nr}
-Datum: ${datum}
-Objekt: ${obj}
-
-LEISTUNGSBESCHREIBUNG:
-${kostensection.replace(/###[^\n]*/,'').replace(/\*\*/g,'').replace(/<br>/g,'\n').trim() || 'Wasserschadensanierung gemäß Beauftragung'}
-
-${betrag ? 'GESAMTBETRAG BRUTTO (inkl. 19% MwSt.): ' + Number(betrag).toLocaleString('de-DE') + '€' : ''}
-
-Zahlbar innerhalb von 14 Tagen ohne Abzug.
-
-Bei Fragen stehen wir Ihnen gerne zur Verfügung.
-
-Mit freundlichen Grüßen
-
-Werner Wiegand & Rayk Wiegand
-Gebäudetrocknung Wiegand
-Forstgasse 19a · 37269 Eschwege
-Tel: 01520 88 112 88
-kontakt@gebaeudetrocknung-wiegand.de`;
-
-  const subject = encodeURIComponent(`Rechnung ${nr} – Gebäudetrocknung Wiegand`);
-  const bodyEnc = encodeURIComponent(body);
-  window.location.href = `mailto:${email}?subject=${subject}&body=${bodyEnc}`;
-
-  document.getElementById('sendStatus').innerHTML = `<span style="color:var(--green);font-weight:600">✅ E-Mail-Programm geöffnet – Rechnung an ${email} bereit zum Senden!</span>`;
+  if (!email) { showErr('E-Mail fehlt.'); return; }
+  alert('Rechnung wird via Mail-Client vorbereitet...');
+  window.location.href = `mailto:${email}?subject=Rechnung&body=Anbei Ihre Rechnung.`;
 }
 
-// ===== HELPERS =====
 function copyResult() {
-  navigator.clipboard.writeText(document.getElementById('resultContent').innerText).then(() => alert('✅ Analyse kopiert!'));
+  navigator.clipboard.writeText(document.getElementById('resultContent').innerText).then(() => alert('Kopiert!'));
 }
+
 function showErr(msg) {
   const el = document.getElementById('errBar');
   el.textContent = '❌ ' + msg;
   el.className = 'err-bar on';
-  setTimeout(() => el.className = 'err-bar', 7000);
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  setTimeout(() => el.className = 'err-bar', 5000);
 }
 </script>
-
 </body>
 </html>
