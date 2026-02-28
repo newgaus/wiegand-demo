@@ -19,7 +19,6 @@
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'Inter',sans-serif;background:var(--gray-50);color:var(--gray-800);font-size:14px;line-height:1.5;}
-
 .header{background:white;border-bottom:1px solid var(--gray-200);padding:16px 32px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:var(--shadow);}
 .header-logo{display:flex;align-items:center;gap:12px;}
 .header-logo .icon{width:38px;height:38px;background:var(--blue);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;}
@@ -29,196 +28,620 @@ body{font-family:'Inter',sans-serif;background:var(--gray-50);color:var(--gray-8
 .api-input{border:1.5px solid var(--gray-200);border-radius:var(--rs);padding:8px 12px;font-family:monospace;font-size:12px;outline:none;width:280px;transition:border-color .2s;}
 .api-input:focus{border-color:var(--blue);}
 .api-label{font-size:11px;font-weight:600;color:var(--blue-dark);white-space:nowrap;}
-
 .main{max-width:1100px;margin:0 auto;padding:28px 24px;}
 .sec-title{font-size:13px;font-weight:700;color:var(--gray-700);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px;display:flex;align-items:center;gap:7px;}
 .card{background:white;border:1px solid var(--gray-200);border-radius:var(--r);padding:22px;margin-bottom:20px;box-shadow:var(--shadow);}
-
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
 .g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;}
+.field{margin-bottom:0;}
 .field label{display:block;font-size:11px;font-weight:600;color:var(--gray-600);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em;}
 .field input,.field select,.field textarea{width:100%;border:1.5px solid var(--gray-200);border-radius:var(--rs);padding:9px 12px;font-family:'Inter',sans-serif;font-size:13px;color:var(--gray-800);outline:none;transition:border-color .2s;background:white;}
-
-.upload-area{border:2px dashed var(--gray-300);border-radius:var(--r);padding:20px;text-align:center;cursor:pointer;position:relative;background:white;}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(26,86,219,.07);}
+.field textarea{min-height:70px;resize:vertical;line-height:1.6;}
+.upload-area{border:2px dashed var(--gray-300);border-radius:var(--r);padding:20px;text-align:center;cursor:pointer;transition:all .2s;position:relative;background:white;}
+.upload-area:hover{border-color:var(--blue);background:var(--blue-light);}
 .upload-area input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.upload-icon{font-size:1.8rem;margin-bottom:6px;}
+.upload-area p{color:var(--gray-500);font-size:12px;}
+.upload-area p span{color:var(--blue);font-weight:600;}
 .photos-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;margin-top:14px;}
 .photo-thumb{position:relative;border-radius:var(--rs);overflow:hidden;aspect-ratio:1;border:2px solid var(--gray-200);}
 .photo-thumb img{width:100%;height:100%;object-fit:cover;}
-.photo-thumb .del{position:absolute;top:4px;right:4px;background:rgba(220,38,38,.9);color:white;border:none;border-radius:50%;width:22px;height:22px;cursor:pointer;}
-.main-badge{position:absolute;bottom:4px;left:4px;background:var(--blue);color:white;font-size:9px;padding:2px 5px;border-radius:4px;}
-
-.btn{display:inline-flex;align-items:center;gap:6px;border:none;border-radius:var(--rs);padding:10px 18px;font-weight:600;cursor:pointer;transition:all .2s;}
+.photo-thumb .del{position:absolute;top:4px;right:4px;background:rgba(220,38,38,.9);color:white;border:none;border-radius:50%;width:22px;height:22px;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:700;}
+.photo-thumb .main-badge{position:absolute;bottom:4px;left:4px;background:var(--blue);color:white;font-size:9px;font-weight:600;padding:2px 5px;border-radius:4px;text-transform:uppercase;}
+.photos-count{font-size:11px;color:var(--green);font-weight:500;margin-top:6px;}
+.audio-card{display:flex;align-items:flex-start;gap:20px;}
+.rec-area{text-align:center;flex-shrink:0;}
+.rec-btn{width:68px;height:68px;border-radius:50%;border:2.5px solid var(--blue);background:var(--blue-light);color:var(--blue);font-size:1.7rem;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;margin:0 auto 8px;}
+.rec-btn:hover{background:var(--blue);color:white;}
+.rec-btn.rec{border-color:var(--red);background:var(--red-light);color:var(--red);animation:pulse 1s infinite;}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+.rec-status{font-size:11px;font-weight:600;color:var(--gray-400);}
+.rec-status.active{color:var(--red);}
+.rec-timer{font-size:18px;font-weight:700;color:var(--gray-700);margin-top:4px;font-family:monospace;}
+.audio-info{flex:1;}
+.audio-info h3{font-size:13px;font-weight:600;color:var(--gray-700);margin-bottom:4px;}
+.audio-info p{font-size:12px;color:var(--gray-500);line-height:1.7;}
+.audio-prev-wrap{margin-top:10px;display:none;}
+.audio-prev-wrap audio{width:100%;border-radius:var(--rs);}
+.transcript-box{display:none;background:var(--blue-light);border:1px solid #bfdbfe;border-radius:var(--rs);padding:10px 12px;margin-top:10px;font-size:12px;line-height:1.7;color:var(--gray-700);}
+.transcript-box.on{display:block;}
+.transcript-lbl{font-size:10px;font-weight:700;color:var(--blue-dark);margin-bottom:3px;text-transform:uppercase;letter-spacing:.05em;}
+.modes{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px;}
+.mchip{border:1.5px solid var(--gray-200);border-radius:var(--rs);padding:10px 6px;text-align:center;cursor:pointer;transition:all .2s;background:white;font-size:10px;font-weight:600;color:var(--gray-500);}
+.mchip:hover{border-color:var(--blue);color:var(--blue);}
+.mchip.on{border-color:var(--blue);background:var(--blue-light);color:var(--blue);}
+.mchip .mi{font-size:1.2rem;display:block;margin-bottom:2px;}
+.btn{display:inline-flex;align-items:center;gap:6px;border:none;border-radius:var(--rs);padding:10px 18px;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;}
 .btn-p{background:var(--blue);color:white;}
-.btn-p:disabled{opacity:.5;}
-.btn-full{width:100%;justify-content:center;}
-
+.btn-p:hover{background:var(--blue-dark);}
+.btn-p:disabled{opacity:.5;cursor:not-allowed;}
+.btn-s{background:white;color:var(--gray-700);border:1.5px solid var(--gray-200);}
+.btn-s:hover{background:var(--gray-50);}
+.btn-g{background:var(--green);color:white;}
+.btn-g:hover{opacity:.9;}
+.btn-full{width:100%;justify-content:center;padding:13px;font-size:14px;}
 .loading{display:none;text-align:center;padding:36px;}
+.loading.on{display:block;}
 .spinner{width:36px;height:36px;border:3px solid var(--gray-200);border-top-color:var(--blue);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px;}
 @keyframes spin{to{transform:rotate(360deg)}}
-
+.loading p{color:var(--gray-500);font-size:13px;}
+.loading span{color:var(--blue);font-weight:600;}
+.loading-steps{margin-top:12px;}
+.step{font-size:12px;color:var(--gray-400);padding:3px 0;}
+.step.active{color:var(--blue);font-weight:600;}
+.step.done{color:var(--green);}
 .result-box{display:none;}
-.result-content{font-size:13px;line-height:1.7;color:var(--gray-700);}
-.viz-wrap{background:#f3f4f6;border-radius:var(--r);padding:20px;margin-top:16px;}
-.viz-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px;margin-top:12px;}
-.viz-item img{width:100%;border-radius:8px;box-shadow:var(--shadow-md);background:white;}
-.viz-item p{font-size:11px;color:var(--gray-500);margin-top:8px;text-align:center;font-weight:600;}
-
-.err-bar{display:none;background:var(--red-light);color:var(--red);padding:12px;border-radius:var(--rs);margin-bottom:14px;font-size:12px;font-weight:600;}
+.result-box.on{display:block;}
+.result-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--gray-100);}
+.result-title{font-size:15px;font-weight:700;color:var(--green);display:flex;align-items:center;gap:6px;}
+.result-actions{display:flex;gap:8px;}
+.result-content{font-size:13px;line-height:1.9;color:var(--gray-700);}
+.result-content h3{font-size:11px;font-weight:700;color:var(--blue-dark);text-transform:uppercase;letter-spacing:.06em;margin:20px 0 7px;padding-bottom:4px;border-bottom:1px solid var(--gray-100);}
+.result-content h3:first-child{margin-top:0;}
+.result-content strong{color:var(--gray-800);font-weight:600;}
+.viz-wrap{background:linear-gradient(135deg,#eff6ff,#dbeafe);border:1px solid #bfdbfe;border-radius:var(--r);padding:20px;margin-top:16px;}
+.viz-hdr{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;}
+.viz-hdr-text h3{font-size:14px;font-weight:700;color:var(--blue-dark);margin-bottom:3px;}
+.viz-hdr-text p{font-size:11px;color:var(--gray-500);}
+.viz-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin-top:12px;}
+.viz-item{text-align:center;}
+.viz-item img{width:100%;border-radius:10px;border:1px solid var(--gray-200);box-shadow:var(--shadow-md);}
+.viz-item p{font-size:10px;color:var(--gray-400);margin-top:5px;text-transform:uppercase;letter-spacing:.05em;}
+.viz-steps{margin-top:10px;}
+.viz-step{font-size:12px;padding:4px 0;color:var(--gray-400);}
+.viz-step.active{color:var(--blue);font-weight:600;}
+.viz-step.done{color:var(--green);}
+.invoice-wrap{background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:1px solid #86efac;border-radius:var(--r);padding:20px;margin-top:16px;}
+.invoice-wrap h3{font-size:14px;font-weight:700;color:#166534;margin-bottom:4px;}
+.invoice-wrap>p{font-size:12px;color:var(--gray-600);margin-bottom:14px;}
+.invoice-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:14px;}
+.invoice-field label{display:block;font-size:10px;font-weight:700;color:#166534;margin-bottom:3px;text-transform:uppercase;letter-spacing:.04em;}
+.invoice-field input{width:100%;border:1.5px solid #86efac;border-radius:var(--rs);padding:8px 11px;font-family:'Inter',sans-serif;font-size:13px;outline:none;background:white;transition:border-color .2s;}
+.invoice-field input:focus{border-color:var(--green);}
+.invoice-preview{background:white;border:1px solid var(--gray-200);border-radius:var(--rs);padding:16px;margin-bottom:12px;display:none;font-size:12px;line-height:1.8;}
+.invoice-preview.on{display:block;}
+.invoice-preview h4{font-size:14px;font-weight:700;margin-bottom:8px;color:var(--gray-800);}
+.err-bar{display:none;background:var(--red-light);border:1px solid #fca5a5;color:var(--red);padding:9px 14px;border-radius:var(--rs);font-size:12px;margin-bottom:14px;}
+.err-bar.on{display:block;}
+.progress-bar{height:3px;background:var(--gray-100);border-radius:2px;margin-top:8px;overflow:hidden;}
+.progress-fill{height:100%;background:var(--blue);border-radius:2px;transition:width .3s;width:0%;}
+@media(max-width:768px){
+  .g2,.g3,.modes,.invoice-grid{grid-template-columns:1fr;}
+  .header{flex-direction:column;gap:10px;align-items:flex-start;}
+  .api-input{width:100%;}
+  .audio-card{flex-direction:column;}
+}
 </style>
 </head>
 <body>
-
 <div class="header">
   <div class="header-logo">
-    <div class="icon" style="color:white">W</div>
+    <div class="icon">🏠</div>
     <div>
       <h1>Gebäudetrocknung Wiegand</h1>
-      <p>Profi-Visualisierung für Wasserschäden</p>
+      <p>KI-Demo · Eschwege · 01520 88 112 88</p>
     </div>
   </div>
   <div class="header-right">
-    <span class="api-label">🔑 OpenAI API Key</span>
-    <input class="api-input" type="password" id="openaiKey" placeholder="sk-...">
+    <span class="api-label">🔑 OpenAI Key</span>
+    <input class="api-input" type="password" id="openaiKey" placeholder="sk-..." />
   </div>
 </div>
-
 <div class="main">
-  <div id="errBar" class="err-bar"></div>
-
+  <div class="err-bar" id="errBar"></div>
   <div class="card">
-    <div class="sec-title">1. Kundendaten</div>
-    <div class="g2">
-      <div class="field"><label>Auftraggeber</label><input type="text" id="auftraggeber" placeholder="z.B. Hr. Schmidt"></div>
-      <div class="field"><label>Objektadresse</label><input type="text" id="objekt" placeholder="Musterweg 12, 37269"></div>
+    <div class="sec-title">📍 Objektdaten</div>
+    <div class="g3" style="margin-bottom:12px">
+      <div class="field"><label>Objekt / Adresse</label><input type="text" id="objekt" placeholder="z.B. EFH, Musterstr. 5, Eschwege" /></div>
+      <div class="field"><label>Auftraggeber</label><input type="text" id="auftraggeber" placeholder="z.B. Familie Müller" /></div>
+      <div class="field">
+        <label>Art des Schadens</label>
+        <select id="schadensart">
+          <option value="">Bitte wählen...</option>
+          <option>Wasserschaden (Rohrbruch)</option>
+          <option>Wasserschaden (Überschwemmung)</option>
+          <option>Leckage (unbekannte Ursache)</option>
+          <option>Schimmelbefall</option>
+          <option>Feuchtigkeit in Wänden/Böden</option>
+          <option>Badezimmer-Sanierung</option>
+          <option>Keller-Sanierung</option>
+          <option>Sonstiges</option>
+        </select>
+      </div>
+    </div>
+    <div class="g3">
+      <div class="field"><label>Fläche (m²)</label><input type="number" id="flaeche" placeholder="z.B. 12" /></div>
+      <div class="field">
+        <label>Versicherungsfall</label>
+        <select id="versicherung"><option>Nein</option><option>Ja – Wohngebäude</option><option>Ja – Hausrat</option><option>Ja – Haftpflicht</option><option>Unklar</option></select>
+      </div>
+      <div class="field"><label>Kostenschätzung Ziel (€)</label><input type="number" id="budget" placeholder="z.B. 5000" /></div>
     </div>
   </div>
-
   <div class="card">
-    <div class="sec-title">2. Schadensfotos</div>
-    <div class="upload-area">
-      <input type="file" id="fileInput" accept="image/*" multiple onchange="handleFiles(this)">
-      <p>Klicken oder Fotos hierher ziehen</p>
+    <div class="sec-title">📸 Fotos des Schadens <span style="font-size:11px;font-weight:400;color:var(--gray-400);text-transform:none;letter-spacing:0">(mehrere möglich – erstes Foto = Hauptbild für 3D)</span></div>
+    <div class="upload-area" id="uploadArea">
+      <input type="file" id="fileInput" accept="image/*" multiple onchange="handleFiles(this)" />
+      <div class="upload-icon">📁</div>
+      <p>Fotos hier ablegen oder <span>auswählen</span></p>
+      <p style="font-size:10px;margin-top:3px;color:var(--gray-400)">Mehrere Fotos gleichzeitig möglich · JPG, PNG, WEBP</p>
     </div>
     <div class="photos-grid" id="photosGrid"></div>
+    <div class="photos-count" id="photosCount"></div>
   </div>
-
-  <button class="btn btn-p btn-full" id="analyzeBtn" onclick="runAnalyse()">Analyse & 3D Vorschau starten</button>
-
+  <div class="card">
+    <div class="sec-title">🎙️ Sprachbeschreibung <span style="font-size:11px;font-weight:400;color:var(--gray-400);text-transform:none;letter-spacing:0">(unbegrenzte Länge)</span></div>
+    <div class="audio-card">
+      <div class="rec-area">
+        <button class="rec-btn" id="recBtn" onclick="toggleRec()">🎙️</button>
+        <div class="rec-status" id="recStatus">Drücken</div>
+        <div class="rec-timer" id="recTimer" style="display:none">0:00</div>
+      </div>
+      <div class="audio-info">
+        <h3>Beschreiben Sie den Schaden mündlich</h3>
+        <p>
+          • Sprechen Sie so lange Sie möchten – keine Zeitbegrenzung<br>
+          • Beschreiben Sie was Sie sehen: Wände, Boden, Decke<br>
+          • Erwähnen Sie Gerüche (Schimmel, Moder)<br>
+          • Sagen Sie wo genau der Schaden ist<br>
+          • Hinweise auf Ursache wenn bekannt
+        </p>
+        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+        <div class="audio-prev-wrap" id="audioPrev">
+          <audio id="audioPlayer" controls style="margin-top:10px"></audio>
+          <p style="color:var(--green);font-size:11px;margin-top:4px;font-weight:500">✓ Aufnahme gespeichert – bereit zur Analyse</p>
+        </div>
+        <div class="transcript-box" id="transcriptBox">
+          <div class="transcript-lbl">🗒️ Transkript (Whisper KI)</div>
+          <div id="transcriptText"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="sec-title">⚙️ Was soll erstellt werden?</div>
+    <div class="modes">
+      <div class="mchip on" id="m-schaden" onclick="toggleM('schaden')"><span class="mi">🔍</span>Schadensbeurteilung</div>
+      <div class="mchip on" id="m-konzept" onclick="toggleM('konzept')"><span class="mi">📋</span>Sanierungskonzept</div>
+      <div class="mchip on" id="m-kosten" onclick="toggleM('kosten')"><span class="mi">💰</span>Kostenschätzung</div>
+      <div class="mchip on" id="m-foerder" onclick="toggleM('foerder')"><span class="mi">🏛️</span>Förderung & Versicherung</div>
+    </div>
+    <button class="btn btn-p btn-full" id="analyzeBtn" onclick="runAnalyse()">🔍 KI-Analyse starten</button>
+  </div>
   <div class="loading" id="loading">
     <div class="spinner"></div>
-    <p>KI erstellt realistische Raum-Visualisierung...</p>
+    <p id="ldText">Analysiere... <span>Bitte warten</span></p>
+    <div class="loading-steps">
+      <div class="step" id="step1">⏳ Sprache transkribieren</div>
+      <div class="step" id="step2">⏳ Fotos analysieren</div>
+      <div class="step" id="step3">⏳ Sanierungskonzept erstellen</div>
+      <div class="step" id="step4">⏳ Kostenschätzung berechnen</div>
+    </div>
   </div>
-
   <div class="card result-box" id="resultCard">
-    <div class="sec-title">KI-Bericht</div>
-    <div id="resultContent" class="result-content"></div>
-    
-    <div class="viz-wrap">
-      <div class="sec-title">3D Sanierungsvorschlag (Realistisches Rendering)</div>
-      <div class="viz-grid" id="vizGrid"></div>
+    <div class="result-hdr">
+      <div class="result-title">✅ Analyse abgeschlossen</div>
+      <div class="result-actions">
+        <button class="btn btn-s" onclick="copyResult()">📋 Kopieren</button>
+      </div>
+    </div>
+    <div class="result-content" id="resultContent"></div>
+    <div class="viz-wrap" id="vizWrap">
+      <div class="viz-hdr">
+        <div class="viz-hdr-text">
+          <h3>✨ KI-Visualisierung: Sanierter Raum</h3>
+          <p>Originalfoto → gpt-image-1 bearbeitet das echte Foto direkt – Kamerawinkel, Maße & Layout bleiben 1:1 erhalten</p>
+        </div>
+        <button class="btn btn-p" id="vizBtn" onclick="generateViz()">✨ 3D erstellen</button>
+      </div>
+      <div class="loading" id="ldViz" style="padding:20px">
+        <div class="spinner"></div>
+        <p id="ldVizText">Analysiere Raum... <span>Bitte warten (~45s)</span></p>
+        <div class="viz-steps">
+          <div class="viz-step" id="vstep1">⏳ Schritt 1: Raumtyp & Perspektive analysieren</div>
+          <div class="viz-step" id="vstep2">⏳ Schritt 2: Optimalen Bildprompt erstellen</div>
+          <div class="viz-step" id="vstep3">⏳ Schritt 3: Perspektivtreues Nachher-Bild generieren</div>
+        </div>
+      </div>
+      <div id="vizResult" style="display:none">
+        <div class="viz-grid" id="vizGrid"></div>
+        <div style="display:flex;align-items:center;justify-content:center;gap:14px;margin-top:14px;flex-wrap:wrap">
+          <p style="font-size:11px;color:var(--gray-400)">🎯 Gleiche Perspektive – saniert und modernisiert</p>
+          <button class="btn btn-s" id="vizRegenBtn" style="display:none;font-size:12px;padding:7px 14px" onclick="generateViz(true)">🔄 Neuen Vorschlag erstellen</button>
+        </div>
+      </div>
+    </div>
+    <div class="invoice-wrap" id="invoiceWrap">
+      <h3>📄 Rechnung an Kunden senden</h3>
+      <p>Rechnung wird automatisch aus der Analyse erstellt – nur E-Mail eingeben und senden</p>
+      <div class="invoice-grid">
+        <div class="invoice-field"><label>Kunden-E-Mail</label><input type="email" id="inv-email" placeholder="kunde@email.de" /></div>
+        <div class="invoice-field"><label>Rechnungsnummer</label><input type="text" id="inv-nr" placeholder="RE-2024-001" /></div>
+        <div class="invoice-field"><label>Gesamtbetrag (€ brutto)</label><input type="number" id="inv-betrag" placeholder="3500" /></div>
+      </div>
+      <div class="invoice-preview" id="invoicePreview"></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn btn-s" onclick="previewInvoice()">🖨️ Vorschau</button>
+        <button class="btn btn-g" onclick="sendInvoice()">📨 Rechnung senden</button>
+      </div>
+      <div id="sendStatus" style="margin-top:10px;font-size:12px;"></div>
     </div>
   </div>
 </div>
-
 <script>
+// ===== STATE =====
 let photos = [];
+let audBlob = null, isRec = false;
+let mRec = null, aChunks = [];
+let timerInterval = null, recSeconds = 0;
+let modes = new Set(['schaden','konzept','kosten','foerder']);
+let lastAnalysis = '';
+let transcript = '';
+let vizHistory      = [];
+let cachedEditPrompt = '';
+let cachedRoomType   = 'Raum';
+
+const MAIN_STEPS = [
+  'Sprache transkribieren',
+  'Fotos analysieren',
+  'Sanierungskonzept erstellen',
+  'Kostenschätzung berechnen'
+];
+const VIZ_STEPS = [
+  'Raumtyp, Kamerawinkel & Maße analysieren',
+  'Originalfoto für KI-Bearbeitung vorbereiten',
+  'gpt-image-1: Sanierung mit exakt gleicher Perspektive'
+];
+
+function showErr(msg) {
+  const el = document.getElementById('errBar');
+  el.textContent = '❌ ' + msg;
+  el.className = 'err-bar on';
+  setTimeout(() => el.className = 'err-bar', 6000);
+}
+function hideErr() {
+  document.getElementById('errBar').className = 'err-bar';
+}
+function setMainStep(n) {
+  for (let i = 1; i <= 4; i++) {
+    const el = document.getElementById('step' + i);
+    if (!el) continue;
+    const label = MAIN_STEPS[i - 1];
+    if (i < n)        { el.className = 'step done';   el.textContent = '✅ ' + label; }
+    else if (i === n) { el.className = 'step active'; el.textContent = '🔄 ' + label; }
+    else              { el.className = 'step';        el.textContent = '⏳ ' + label; }
+  }
+}
+function setVizStep(n) {
+  for (let i = 1; i <= 3; i++) {
+    const el = document.getElementById('vstep' + i);
+    if (!el) continue;
+    const label = 'Schritt ' + i + ': ' + VIZ_STEPS[i - 1];
+    if (i < n)        { el.className = 'viz-step done';   el.textContent = '✅ ' + label; }
+    else if (i === n) { el.className = 'viz-step active'; el.textContent = '🔄 ' + label; }
+    else              { el.className = 'viz-step';        el.textContent = '⏳ ' + label; }
+  }
+}
+function formatMarkdown(text) {
+  return text
+    .replace(/### (.+)/g, '<h3>$1</h3>')
+    .replace(/## (.+)/g,  '<h3>$1</h3>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/^- (.+)/gm, '• $1')
+    .replace(/\n/g, '<br>');
+}
 
 function handleFiles(input) {
   const files = Array.from(input.files);
+  if (!files.length) return;
+  let loaded = 0;
   files.forEach(file => {
     const reader = new FileReader();
     reader.onload = e => {
-      photos.push({ base64: e.target.result.split(',')[1], full: e.target.result });
-      renderPhotos();
+      photos.push({ base64: e.target.result.split(',')[1], name: file.name, full: e.target.result });
+      loaded++;
+      if (loaded === files.length) renderPhotos();
     };
     reader.readAsDataURL(file);
   });
 }
-
 function renderPhotos() {
+  vizHistory = []; cachedEditPrompt = ''; cachedRoomType = 'Raum';
+  document.getElementById('vizResult').style.display = 'none';
+  const regenBtn = document.getElementById('vizRegenBtn');
+  if (regenBtn) regenBtn.style.display = 'none';
   const grid = document.getElementById('photosGrid');
-  grid.innerHTML = photos.map((p,i) => `
+  grid.innerHTML = photos.map((p, i) => `
     <div class="photo-thumb">
-      <img src="${p.full}">
-      <button class="del" onclick="photos.splice(${i},1);renderPhotos()">×</button>
-      ${i===0?'<span class="main-badge">Referenz</span>':''}
+      <img src="${p.full}" alt="${p.name}" />
+      <button class="del" onclick="removePhoto(${i})">×</button>
+      ${i === 0 ? '<span class="main-badge">Haupt</span>' : ''}
     </div>
   `).join('');
+  const count = document.getElementById('photosCount');
+  count.textContent = photos.length > 0 ? `✓ ${photos.length} Foto${photos.length > 1 ? 's' : ''} geladen` : '';
+  document.getElementById('fileInput').value = '';
+}
+function removePhoto(i) {
+  photos.splice(i, 1);
+  renderPhotos();
+}
+
+async function toggleRec() {
+  if (!isRec) {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' : 'audio/webm';
+      mRec = new MediaRecorder(stream, { mimeType });
+      aChunks = [];
+      mRec.ondataavailable = e => { if (e.data.size > 0) aChunks.push(e.data); };
+      mRec.onstop = () => {
+        audBlob = new Blob(aChunks, { type: mimeType });
+        document.getElementById('audioPlayer').src = URL.createObjectURL(audBlob);
+        document.getElementById('audioPrev').style.display = 'block';
+        stream.getTracks().forEach(t => t.stop());
+      };
+      mRec.start(500);
+      isRec = true; recSeconds = 0;
+      document.getElementById('recBtn').textContent = '⏹';
+      document.getElementById('recBtn').classList.add('rec');
+      document.getElementById('recStatus').textContent = '● Aufnahme';
+      document.getElementById('recStatus').classList.add('active');
+      document.getElementById('recTimer').style.display = 'block';
+      timerInterval = setInterval(() => {
+        recSeconds++;
+        const m = Math.floor(recSeconds / 60);
+        const s = recSeconds % 60;
+        document.getElementById('recTimer').textContent = `${m}:${String(s).padStart(2, '0')}`;
+        document.getElementById('progressFill').style.width = Math.min((recSeconds / 120) * 100, 100) + '%';
+      }, 1000);
+    } catch (e) {
+      showErr('Mikrofon-Zugriff verweigert. Bitte Berechtigung im Browser erteilen.');
+    }
+  } else {
+    mRec.stop(); isRec = false;
+    clearInterval(timerInterval);
+    document.getElementById('recBtn').textContent = '🎙️';
+    document.getElementById('recBtn').classList.remove('rec');
+    document.getElementById('recStatus').textContent = '✓ Gespeichert';
+    document.getElementById('recStatus').classList.remove('active');
+  }
+}
+
+function toggleM(m) {
+  const el = document.getElementById('m-' + m);
+  if (modes.has(m)) { modes.delete(m); el.classList.remove('on'); }
+  else              { modes.add(m);    el.classList.add('on');    }
 }
 
 async function runAnalyse() {
   const key = document.getElementById('openaiKey').value.trim();
-  if (!key) { showError('API Key fehlt!'); return; }
-  if (photos.length === 0) { showError('Bitte laden Sie mindestens ein Foto hoch!'); return; }
-
-  document.getElementById('loading').style.display = 'block';
+  if (!key) { showErr('Bitte OpenAI API Key eingeben.'); return; }
+  if (!photos.length && !audBlob) { showErr('Bitte mindestens ein Foto oder Sprachaufnahme bereitstellen.'); return; }
+  hideErr();
   document.getElementById('analyzeBtn').disabled = true;
-
-  try {
-    // Schritt 1: Raum bestimmen
-    const roomResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
-      body: JSON.stringify({
-        model: 'gpt-4o',
-        messages: [{ role: 'user', content: [
-          { type: 'text', text: 'Nenne nur das Zimmer auf diesem Foto (ein Wort, z.B. Badezimmer, Küche).' },
-          { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${photos[0].base64}` } }
-        ]}]
-      })
-    });
-    const roomData = await roomResponse.json();
-    const raum = roomData.choices[0].message.content.trim();
-
-    // Schritt 2: Realistische Bildgenerierung
-    // Wir nutzen hier einen extrem spezifischen "Realismus-Prompt", um den KI-Look zu vermeiden
-    const prompt = `A highly realistic architectural 3D rendering of a professionaly renovated ${raum}. 
-    STYLE: Clean, modern interior design, photorealistic, 8k resolution, cinematic natural lighting from a window, soft shadows. 
-    MATERIALS: High-quality matte floor tiles, smooth plastered walls in light neutral colors (eggshell or light grey), real wood accents, chrome fixtures. 
-    CAMERA: Wide angle eye-level shot, professional architectural photography style (like ArchDaily or Dezeen). 
-    NO FUTURISTIC ELEMENTS: No glowing neon, no sci-fi shapes, no digital artifacts, no saturated purple/blue lights. 
-    Atmosphere: Bright, airy, and inviting. Exactly like a real estate marketing brochure.`;
-
-    const imageResponse = await fetch('https://api.openai.com/v1/images/generations', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
-      body: JSON.stringify({
-        model: 'dall-e-3',
-        prompt: prompt,
-        n: 1,
-        size: '1024x1024',
-        quality: 'hd',
-        style: 'natural' // WICHTIG: Stellt DALL-E auf den weniger "künstlerischen" Modus
-      })
-    });
-    
-    const imageData = await imageResponse.json();
-    if (!imageResponse.ok) throw new Error(imageData.error.message);
-
-    const imgSrc = imageData.data[0].url;
-    
-    document.getElementById('vizGrid').innerHTML = `
-      <div class="viz-item"><img src="${photos[0].full}"><p>IST-ZUSTAND (SCHADEN)</p></div>
-      <div class="viz-item"><img src="${imgSrc}"><p>PLANUNG (SANIERTER ZUSTAND)</p></div>
-    `;
-
-    document.getElementById('resultCard').style.display = 'block';
-    document.getElementById('resultContent').innerHTML = `Der Raum wurde als <strong>${raum}</strong> identifiziert. Basierend auf den Fotos wurde ein Sanierungskonzept erstellt.`;
-    document.getElementById('resultCard').scrollIntoView({behavior: 'smooth'});
-
-  } catch (e) {
-    showError(e.message);
-  } finally {
-    document.getElementById('loading').style.display = 'none';
-    document.getElementById('analyzeBtn').disabled = false;
+  document.getElementById('loading').classList.add('on');
+  document.getElementById('resultCard').classList.remove('on');
+  transcript = '';
+  setMainStep(1);
+  if (audBlob) {
+    try {
+      const fd = new FormData();
+      fd.append('file', audBlob, 'aufnahme.webm');
+      fd.append('model', 'whisper-1');
+      fd.append('language', 'de');
+      const r = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+        method: 'POST', headers: { 'Authorization': 'Bearer ' + key }, body: fd
+      });
+      if (r.ok) {
+        const d = await r.json();
+        if (d.text) {
+          transcript = d.text;
+          document.getElementById('transcriptText').textContent = transcript;
+          document.getElementById('transcriptBox').classList.add('on');
+        }
+      }
+    } catch (e) { console.warn('Transkription fehlgeschlagen:', e); }
   }
+  setMainStep(2);
+  const kunde   = document.getElementById('auftraggeber').value || 'Unbekannt';
+  const obj     = document.getElementById('objekt').value || 'Unbekannt';
+  const schaden = document.getElementById('schadensart').value || 'Unbekannt';
+  const flaeche = document.getElementById('flaeche').value || 'unbekannt';
+  const vers    = document.getElementById('versicherung').value || '';
+  const budget  = document.getElementById('budget').value || '';
+  const systemPrompt = `Du bist ein erfahrener Bausachverständiger und Gutachter für Gebäudetrocknung und Sanierung. Du erstellst professionelle, strukturierte Berichte für das Unternehmen Gebäudetrocknung Wiegand. Formatiere deine Antwort mit ### Überschriften und **fett** für wichtige Punkte. Antworte ausschließlich auf Deutsch. Sei präzise, praxisnah und konkret.`;
+  let userText = `Analysiere diesen Gebäudeschaden professionell.\n\n**Auftragsdaten:**\n- Objekt: ${obj}\n- Auftraggeber: ${kunde}\n- Schadensart: ${schaden}\n- Fläche: ${flaeche} m²\n- Versicherungsfall: ${vers}\n${budget ? '- Budgetrahmen: ' + budget + ' €' : ''}\n${transcript ? '\n**Mündliche Schadensbeschreibung des Technikers:**\n' + transcript + '\n' : ''}\nErstelle folgende Abschnitte:\n`;
+  if (modes.has('schaden')) userText += `\n### Schadensbeurteilung\n- Sichtbare Schäden detailliert beschreiben\n- Vermutliche Ursache und Schadensausmaß\n- Sofortmaßnahmen die jetzt getroffen werden müssen\n`;
+  if (modes.has('konzept')) userText += `\n### Sanierungskonzept\n- Schritt-für-Schritt Maßnahmenplan\n- Benötigte Geräte und Materialien\n- Realistischer Zeitplan (in Tagen/Wochen)\n`;
+  if (modes.has('kosten'))  userText += `\n### Kostenschätzung\n- Aufgeschlüsselte Kostenpositionen in EUR\n- Gerätekosten, Material, Arbeitszeit separat\n- Gesamtsumme Netto + 19% MwSt = Brutto\n`;
+  if (modes.has('foerder')) userText += `\n### Förderung & Versicherung\n- Versicherungsrelevante Hinweise und Dokumentationstipps\n- Mögliche Förderungen (KfW, BAFA, Landesförderprogramme)\n- Empfehlungen für die Schadensmeldung\n`;
+  const parts = [{ type: 'text', text: userText }];
+  for (let i = 0; i < Math.min(photos.length, 4); i++) {
+    parts.push({ type: 'image_url', image_url: { url: 'data:image/jpeg;base64,' + photos[i].base64, detail: 'high' } });
+  }
+  setMainStep(3);
+  try {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+      body: JSON.stringify({ model: 'gpt-4o', max_tokens: 2500, messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: parts }] })
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error?.message || 'API Fehler ' + response.status);
+    setMainStep(4);
+    await new Promise(r => setTimeout(r, 500));
+    lastAnalysis = data.choices[0].message.content;
+    document.getElementById('resultContent').innerHTML = formatMarkdown(lastAnalysis);
+    document.getElementById('resultCard').classList.add('on');
+    document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth' });
+  } catch (e) { showErr('Analyse-Fehler: ' + e.message); }
+  document.getElementById('loading').classList.remove('on');
+  document.getElementById('analyzeBtn').disabled = false;
 }
 
-function showError(m) {
-  const el = document.getElementById('errBar');
-  el.textContent = '❌ ' + m;
-  el.style.display = 'block';
-  setTimeout(() => el.style.display = 'none', 5000);
+async function generateViz(skipAnalysis = false) {
+  const key = document.getElementById('openaiKey').value.trim();
+  if (!key) { showErr('Bitte OpenAI Key eingeben.'); return; }
+  if (!photos.length) { showErr('Bitte zuerst ein Foto hochladen.'); return; }
+  document.getElementById('vizBtn').disabled = true;
+  document.getElementById('vizRegenBtn').disabled = true;
+  document.getElementById('ldViz').classList.add('on');
+  if (!vizHistory.length) document.getElementById('vizResult').style.display = 'none';
+  let roomType   = cachedRoomType;
+  let editPrompt = cachedEditPrompt;
+  if (!skipAnalysis || !cachedEditPrompt) {
+    setVizStep(1);
+    try {
+      const r1 = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+        body: JSON.stringify({
+          model: 'gpt-4o', max_tokens: 400,
+          messages: [{ role: 'user', content: [
+            { type: 'image_url', image_url: { url: 'data:image/jpeg;base64,' + photos[0].base64, detail: 'high' } },
+            { type: 'text', text: `Analyze this room photo very precisely. Return ONLY valid JSON, no markdown:\n{\n  "roomType": "room type in German, one word",\n  "cameraAngle": "exact camera position in English: height from floor, angle, direction",\n  "fixedElements": "list every visible fixture/element with its EXACT wall position in English",\n  "renovationMaterials": "modern renovation materials for this room type in English"\n}` }
+          ]}]
+        })
+      });
+      const d1 = await r1.json();
+      if (d1.choices) {
+        const match = d1.choices[0].message.content.trim().match(/\{[\s\S]*\}/);
+        if (match) {
+          const p = JSON.parse(match[0]);
+          if (p.roomType) roomType = p.roomType;
+          editPrompt = [
+            `PHOTO RENOVATION TASK: Edit this photo to show the same room after a modern renovation.`,
+            `CAMERA: Keep the exact camera position unchanged — ${p.cameraAngle || 'same camera angle and height as original'}.`,
+            `KEEP THESE ELEMENTS IN THEIR EXACT POSITIONS — do not move, remove or replace any of them: ${p.fixedElements || 'all fixtures remain in place'}.`,
+            `ONLY UPDATE: wall tiles, floor tiles, ceiling paint, grout, damaged surfaces, stains, mold, water damage. Replace old/damaged materials with: ${p.renovationMaterials || 'modern European high-end materials'}.`,
+            `DO NOT: change camera angle, move walls, relocate fixtures, remove the bathtub/toilet/radiator/windows, or alter room proportions.`,
+            `Result: bright, clean, photorealistic renovation. Soft warm LED ceiling light. No damage, no stains, no mold, no moisture visible.`
+          ].join(' ');
+          cachedRoomType = roomType; cachedEditPrompt = editPrompt;
+        }
+      }
+    } catch (e) { console.warn('Raumanalyse fehlgeschlagen:', e); }
+    if (!editPrompt) editPrompt = cachedEditPrompt || `IMAGE EDITING TASK — DO NOT change camera angle, perspective, room dimensions, wall positions or layout. ONLY replace damaged/stained/moldy surfaces with modern renovation: clean tiles, updated fixtures, bright LED lighting. No damage, no stains, no moisture. Photorealistic.`;
+  } else {
+    setVizStep(1); setVizStep(2);
+  }
+  setVizStep(2);
+  let imageBlob;
+  try {
+    imageBlob = await resizeImagePNG(photos[0].full, 1024);
+    if (imageBlob.size > 20 * 1024 * 1024) throw new Error('Foto ist zu groß (max. 20 MB).');
+  } catch (e) {
+    showErr('Bild-Vorbereitung fehlgeschlagen: ' + e.message);
+    document.getElementById('ldViz').classList.remove('on');
+    document.getElementById('vizBtn').disabled = false;
+    document.getElementById('vizRegenBtn').disabled = false;
+    return;
+  }
+  setVizStep(3);
+  try {
+    const fd = new FormData();
+    fd.append('model',   'gpt-image-1');
+    fd.append('image[]', imageBlob, 'room.png');
+    fd.append('prompt',  editPrompt);
+    fd.append('n',       '1');
+    fd.append('size',    'auto');
+    fd.append('quality', 'high');
+    const response = await fetch('https://api.openai.com/v1/images/edits', {
+      method: 'POST', headers: { 'Authorization': 'Bearer ' + key }, body: fd
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error?.message || 'Bildgenerierung fehlgeschlagen');
+    const item = data.data[0];
+    const imgSrc = item.b64_json ? 'data:image/png;base64,' + item.b64_json : item.url;
+    vizHistory.push(imgSrc);
+    renderVizHistory();
+  } catch (e) { showErr('Visualisierung Fehler: ' + e.message); }
+  document.getElementById('ldViz').classList.remove('on');
+  document.getElementById('vizBtn').disabled = false;
+  document.getElementById('vizRegenBtn').disabled = false;
+}
+
+function renderVizHistory() {
+  const variants = vizHistory.map((src, i) => `
+    <div class="viz-item">
+      <img src="${src}" alt="Vorschlag ${i + 1}" />
+      <p>✨ Vorschlag ${i + 1} – ${cachedRoomType}</p>
+    </div>`).join('');
+  document.getElementById('vizGrid').innerHTML = `
+    <div class="viz-item">
+      <img src="${photos[0].full}" alt="Vorher" />
+      <p>📷 IST-Zustand (Schaden)</p>
+    </div>${variants}`;
+  document.getElementById('vizResult').style.display = 'block';
+  document.getElementById('vizRegenBtn').style.display = 'inline-flex';
+  document.getElementById('vizResult').scrollIntoView({ behavior: 'smooth' });
+}
+
+function resizeImagePNG(dataUrl, maxSize) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(maxSize / img.width, maxSize / img.height, 1);
+      const w = Math.round(img.width * scale);
+      const h = Math.round(img.height * scale);
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('PNG-Export fehlgeschlagen')), 'image/png');
+    };
+    img.onerror = () => reject(new Error('Bild konnte nicht geladen werden'));
+    img.src = dataUrl;
+  });
+}
+
+function previewInvoice() {
+  const nr     = document.getElementById('inv-nr').value || 'RE-2024-001';
+  const betrag = parseFloat(document.getElementById('inv-betrag').value || '0');
+  const email  = document.getElementById('inv-email').value || '–';
+  const obj    = document.getElementById('objekt').value || 'Objekt';
+  document.getElementById('invoicePreview').innerHTML = `
+    <h4>Rechnung ${nr}</h4>
+    <p><strong>Empfänger:</strong> ${email}</p>
+    <p><strong>Leistung:</strong> Gebäudetrocknung & Sanierung – ${obj}</p>
+    <p><strong>Betrag (brutto):</strong> ${betrag.toLocaleString('de-DE', { minimumFractionDigits: 2 })} €</p>
+    <p><strong>Netto:</strong> ${(betrag / 1.19).toLocaleString('de-DE', { minimumFractionDigits: 2 })} € · <strong>MwSt 19%:</strong> ${(betrag - betrag / 1.19).toLocaleString('de-DE', { minimumFractionDigits: 2 })} €</p>`;
+  document.getElementById('invoicePreview').classList.add('on');
+}
+function sendInvoice() {
+  const email = document.getElementById('inv-email').value;
+  if (!email) { showErr('E-Mail fehlt.'); return; }
+  const nr     = document.getElementById('inv-nr').value || 'RE-2024-001';
+  const betrag = document.getElementById('inv-betrag').value || '0';
+  const obj    = document.getElementById('objekt').value || 'Objekt';
+  window.location.href = `mailto:${email}?subject=${encodeURIComponent('Rechnung ' + nr + ' – Gebäudetrocknung Wiegand')}&body=${encodeURIComponent('Sehr geehrte Damen und Herren,\n\nbitte überweisen Sie den Rechnungsbetrag von ' + betrag + ' € für die Sanierungsarbeiten am Objekt "' + obj + '".\n\nRechnungsnummer: ' + nr + '\n\nMit freundlichen Grüßen\nGebäudetrocknung Wiegand\nTel: 01520 88 112 88')}`;
+}
+function copyResult() {
+  navigator.clipboard.writeText(document.getElementById('resultContent').innerText)
+    .then(() => alert('Analyse in die Zwischenablage kopiert!'))
+    .catch(() => showErr('Kopieren fehlgeschlagen.'));
 }
 </script>
 </body>
