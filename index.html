@@ -126,11 +126,29 @@ body{font-family:'Inter',sans-serif;background:var(--gray-50);color:var(--gray-8
 .err-bar.on{display:block;}
 .progress-bar{height:3px;background:var(--gray-100);border-radius:2px;margin-top:8px;overflow:hidden;}
 .progress-fill{height:100%;background:var(--blue);border-radius:2px;transition:width .3s;width:0%;}
+.reno-wishes-wrap{background:white;border:1.5px solid #bfdbfe;border-radius:var(--rs);padding:12px 14px;margin-bottom:14px;}
+.reno-wishes-label{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.reno-wishes-label strong{font-size:11px;font-weight:700;color:var(--blue-dark);text-transform:uppercase;letter-spacing:.05em;}
+.reno-wishes-label span{font-size:10px;color:var(--gray-400);}
+.reno-input-row{display:flex;gap:8px;align-items:flex-start;}
+.reno-input-row textarea{flex:1;min-height:64px;border:1.5px solid var(--gray-200);border-radius:var(--rs);padding:8px 10px;font-size:12px;font-family:'Inter',sans-serif;outline:none;resize:vertical;background:white;color:var(--gray-700);line-height:1.6;}
+.reno-input-row textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(26,86,219,.07);}
+.reno-input-row textarea::placeholder{color:var(--gray-400);}
+.reno-rec-wrap{display:flex;flex-direction:column;align-items:center;gap:3px;flex-shrink:0;}
+.reno-rec-btn{width:42px;height:42px;border-radius:50%;border:2px solid var(--blue);background:var(--blue-light);color:var(--blue);font-size:1.1rem;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;}
+.reno-rec-btn:hover{background:var(--blue);color:white;}
+.reno-rec-btn.rec{border-color:var(--red);background:var(--red-light);color:var(--red);animation:pulse 1s infinite;}
+.reno-rec-status{font-size:9px;font-weight:600;color:var(--gray-400);text-align:center;}
+.reno-rec-status.active{color:var(--red);}
+.reno-transcript{display:none;font-size:11px;color:var(--blue-dark);margin-top:7px;padding:6px 9px;background:var(--blue-light);border-radius:6px;line-height:1.6;}
+.reno-transcript.on{display:block;}
 @media(max-width:768px){
   .g2,.g3,.modes,.invoice-grid{grid-template-columns:1fr;}
   .header{flex-direction:column;gap:10px;align-items:flex-start;}
   .api-input{width:100%;}
   .audio-card{flex-direction:column;}
+  .reno-input-row{flex-direction:column;}
+  .reno-rec-wrap{flex-direction:row;}
 }
 </style>
 </head>
@@ -255,6 +273,20 @@ body{font-family:'Inter',sans-serif;background:var(--gray-50);color:var(--gray-8
         </div>
         <button class="btn btn-p" id="vizBtn" onclick="generateViz()">✨ 3D erstellen</button>
       </div>
+      <div class="reno-wishes-wrap">
+        <div class="reno-wishes-label">
+          <strong>💬 Ihre Wünsche</strong>
+          <span>optional · Fliesen, Farben, Möbelposition, Stil...</span>
+        </div>
+        <div class="reno-input-row">
+          <textarea id="renoWishes" placeholder="z.B. Weiße großformatige Fliesen · Badewanne auf der linken Seite behalten · Waschtisch-Unterschrank in Anthrazit · Heller Holzboden · Regendusche rechts · Moderne graue Akzentwand"></textarea>
+          <div class="reno-rec-wrap">
+            <button class="reno-rec-btn" id="renoRecBtn" onclick="toggleRenoRec()" title="Wünsche einsprechen">🎙️</button>
+            <span class="reno-rec-status" id="renoRecStatus">Sprechen</span>
+          </div>
+        </div>
+        <div class="reno-transcript" id="renoTranscript"></div>
+      </div>
       <div class="loading" id="ldViz" style="padding:20px">
         <div class="spinner"></div>
         <p id="ldVizText">Analysiere Raum... <span>Bitte warten (~45s)</span></p>
@@ -298,10 +330,15 @@ let timerInterval = null, recSeconds = 0;
 let modes = new Set(['schaden','konzept','kosten','foerder']);
 let lastAnalysis = '';
 let transcript = '';
-let vizHistory      = [];
+let vizHistory       = [];
 let cachedEditPrompt = '';
 let cachedRoomType   = 'Raum';
+let renoAudBlob      = null;
+let renoIsRec        = false;
+let renoMRec         = null;
+let renoAChunks      = [];
 
+// ===== STEP LABELS =====
 const MAIN_STEPS = [
   'Sprache transkribieren',
   'Fotos analysieren',
@@ -314,6 +351,7 @@ const VIZ_STEPS = [
   'gpt-image-1: Sanierung mit exakt gleicher Perspektive'
 ];
 
+// ===== HELPERS =====
 function showErr(msg) {
   const el = document.getElementById('errBar');
   el.textContent = '❌ ' + msg;
@@ -323,6 +361,7 @@ function showErr(msg) {
 function hideErr() {
   document.getElementById('errBar').className = 'err-bar';
 }
+
 function setMainStep(n) {
   for (let i = 1; i <= 4; i++) {
     const el = document.getElementById('step' + i);
@@ -343,6 +382,7 @@ function setVizStep(n) {
     else              { el.className = 'viz-step';        el.textContent = '⏳ ' + label; }
   }
 }
+
 function formatMarkdown(text) {
   return text
     .replace(/### (.+)/g, '<h3>$1</h3>')
@@ -353,6 +393,7 @@ function formatMarkdown(text) {
     .replace(/\n/g, '<br>');
 }
 
+// ===== MULTI FOTO =====
 function handleFiles(input) {
   const files = Array.from(input.files);
   if (!files.length) return;
@@ -389,6 +430,7 @@ function removePhoto(i) {
   renderPhotos();
 }
 
+// ===== AUDIO =====
 async function toggleRec() {
   if (!isRec) {
     try {
@@ -404,7 +446,8 @@ async function toggleRec() {
         stream.getTracks().forEach(t => t.stop());
       };
       mRec.start(500);
-      isRec = true; recSeconds = 0;
+      isRec = true;
+      recSeconds = 0;
       document.getElementById('recBtn').textContent = '⏹';
       document.getElementById('recBtn').classList.add('rec');
       document.getElementById('recStatus').textContent = '● Aufnahme';
@@ -430,21 +473,25 @@ async function toggleRec() {
   }
 }
 
+// ===== MODES =====
 function toggleM(m) {
   const el = document.getElementById('m-' + m);
   if (modes.has(m)) { modes.delete(m); el.classList.remove('on'); }
   else              { modes.add(m);    el.classList.add('on');    }
 }
 
+// ===== ANALYSE =====
 async function runAnalyse() {
   const key = document.getElementById('openaiKey').value.trim();
   if (!key) { showErr('Bitte OpenAI API Key eingeben.'); return; }
   if (!photos.length && !audBlob) { showErr('Bitte mindestens ein Foto oder Sprachaufnahme bereitstellen.'); return; }
+
   hideErr();
   document.getElementById('analyzeBtn').disabled = true;
   document.getElementById('loading').classList.add('on');
   document.getElementById('resultCard').classList.remove('on');
   transcript = '';
+
   setMainStep(1);
   if (audBlob) {
     try {
@@ -453,7 +500,9 @@ async function runAnalyse() {
       fd.append('model', 'whisper-1');
       fd.append('language', 'de');
       const r = await fetch('https://api.openai.com/v1/audio/transcriptions', {
-        method: 'POST', headers: { 'Authorization': 'Bearer ' + key }, body: fd
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + key },
+        body: fd
       });
       if (r.ok) {
         const d = await r.json();
@@ -465,6 +514,7 @@ async function runAnalyse() {
       }
     } catch (e) { console.warn('Transkription fehlgeschlagen:', e); }
   }
+
   setMainStep(2);
   const kunde   = document.getElementById('auftraggeber').value || 'Unbekannt';
   const obj     = document.getElementById('objekt').value || 'Unbekannt';
@@ -472,46 +522,120 @@ async function runAnalyse() {
   const flaeche = document.getElementById('flaeche').value || 'unbekannt';
   const vers    = document.getElementById('versicherung').value || '';
   const budget  = document.getElementById('budget').value || '';
-  const systemPrompt = `Du bist ein erfahrener Bausachverständiger und Gutachter für Gebäudetrocknung und Sanierung. Du erstellst professionelle, strukturierte Berichte für das Unternehmen Gebäudetrocknung Wiegand. Formatiere deine Antwort mit ### Überschriften und **fett** für wichtige Punkte. Antworte ausschließlich auf Deutsch. Sei präzise, praxisnah und konkret.`;
+
+  const systemPrompt = `Du bist ein erfahrener Bausachverständiger und Gutachter für Gebäudetrocknung und Sanierung.
+Du erstellst professionelle, strukturierte Berichte für das Unternehmen Gebäudetrocknung Wiegand.
+Formatiere deine Antwort mit ### Überschriften und **fett** für wichtige Punkte.
+Antworte ausschließlich auf Deutsch. Sei präzise, praxisnah und konkret.`;
+
   let userText = `Analysiere diesen Gebäudeschaden professionell.\n\n**Auftragsdaten:**\n- Objekt: ${obj}\n- Auftraggeber: ${kunde}\n- Schadensart: ${schaden}\n- Fläche: ${flaeche} m²\n- Versicherungsfall: ${vers}\n${budget ? '- Budgetrahmen: ' + budget + ' €' : ''}\n${transcript ? '\n**Mündliche Schadensbeschreibung des Technikers:**\n' + transcript + '\n' : ''}\nErstelle folgende Abschnitte:\n`;
   if (modes.has('schaden')) userText += `\n### Schadensbeurteilung\n- Sichtbare Schäden detailliert beschreiben\n- Vermutliche Ursache und Schadensausmaß\n- Sofortmaßnahmen die jetzt getroffen werden müssen\n`;
   if (modes.has('konzept')) userText += `\n### Sanierungskonzept\n- Schritt-für-Schritt Maßnahmenplan\n- Benötigte Geräte und Materialien\n- Realistischer Zeitplan (in Tagen/Wochen)\n`;
   if (modes.has('kosten'))  userText += `\n### Kostenschätzung\n- Aufgeschlüsselte Kostenpositionen in EUR\n- Gerätekosten, Material, Arbeitszeit separat\n- Gesamtsumme Netto + 19% MwSt = Brutto\n`;
   if (modes.has('foerder')) userText += `\n### Förderung & Versicherung\n- Versicherungsrelevante Hinweise und Dokumentationstipps\n- Mögliche Förderungen (KfW, BAFA, Landesförderprogramme)\n- Empfehlungen für die Schadensmeldung\n`;
+
   const parts = [{ type: 'text', text: userText }];
   for (let i = 0; i < Math.min(photos.length, 4); i++) {
     parts.push({ type: 'image_url', image_url: { url: 'data:image/jpeg;base64,' + photos[i].base64, detail: 'high' } });
   }
+
   setMainStep(3);
   try {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
-      body: JSON.stringify({ model: 'gpt-4o', max_tokens: 2500, messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: parts }] })
+      body: JSON.stringify({
+        model: 'gpt-4o',
+        max_tokens: 2500,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user',   content: parts }
+        ]
+      })
     });
     const data = await response.json();
     if (!response.ok) throw new Error(data.error?.message || 'API Fehler ' + response.status);
+
     setMainStep(4);
     await new Promise(r => setTimeout(r, 500));
+
     lastAnalysis = data.choices[0].message.content;
     document.getElementById('resultContent').innerHTML = formatMarkdown(lastAnalysis);
     document.getElementById('resultCard').classList.add('on');
     document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth' });
-  } catch (e) { showErr('Analyse-Fehler: ' + e.message); }
+  } catch (e) {
+    showErr('Analyse-Fehler: ' + e.message);
+  }
+
   document.getElementById('loading').classList.remove('on');
   document.getElementById('analyzeBtn').disabled = false;
+}
+
+// ===== VISUALISIERUNG =====
+async function toggleRenoRec() {
+  if (!renoIsRec) {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' : 'audio/webm';
+      renoMRec = new MediaRecorder(stream, { mimeType });
+      renoAChunks = [];
+      renoMRec.ondataavailable = e => { if (e.data.size > 0) renoAChunks.push(e.data); };
+      renoMRec.onstop = () => {
+        renoAudBlob = new Blob(renoAChunks, { type: mimeType });
+        stream.getTracks().forEach(t => t.stop());
+        document.getElementById('renoRecStatus').textContent = '✓ OK';
+      };
+      renoMRec.start(500);
+      renoIsRec = true;
+      document.getElementById('renoRecBtn').textContent = '⏹';
+      document.getElementById('renoRecBtn').classList.add('rec');
+      document.getElementById('renoRecStatus').textContent = '● REC';
+      document.getElementById('renoRecStatus').classList.add('active');
+    } catch (e) { showErr('Mikrofon-Zugriff verweigert.'); }
+  } else {
+    renoMRec.stop(); renoIsRec = false;
+    document.getElementById('renoRecBtn').textContent = '🎙️';
+    document.getElementById('renoRecBtn').classList.remove('rec');
+    document.getElementById('renoRecStatus').classList.remove('active');
+  }
 }
 
 async function generateViz(skipAnalysis = false) {
   const key = document.getElementById('openaiKey').value.trim();
   if (!key) { showErr('Bitte OpenAI Key eingeben.'); return; }
   if (!photos.length) { showErr('Bitte zuerst ein Foto hochladen.'); return; }
+
   document.getElementById('vizBtn').disabled = true;
   document.getElementById('vizRegenBtn').disabled = true;
   document.getElementById('ldViz').classList.add('on');
   if (!vizHistory.length) document.getElementById('vizResult').style.display = 'none';
+
+  let userWishes = document.getElementById('renoWishes').value.trim();
+  if (renoAudBlob && !skipAnalysis) {
+    try {
+      const wfd = new FormData();
+      wfd.append('file', renoAudBlob, 'wuensche.webm');
+      wfd.append('model', 'whisper-1');
+      wfd.append('language', 'de');
+      const wr = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+        method: 'POST', headers: { 'Authorization': 'Bearer ' + key }, body: wfd
+      });
+      if (wr.ok) {
+        const wd = await wr.json();
+        if (wd.text) {
+          const wt = wd.text.trim();
+          userWishes = userWishes ? userWishes + ' · ' + wt : wt;
+          const el = document.getElementById('renoTranscript');
+          el.textContent = '🎙️ ' + wt;
+          el.classList.add('on');
+        }
+      }
+    } catch (e) { console.warn('Wünsche-Transkription fehlgeschlagen:', e); }
+  }
+
   let roomType   = cachedRoomType;
   let editPrompt = cachedEditPrompt;
+
   if (!skipAnalysis || !cachedEditPrompt) {
     setVizStep(1);
     try {
@@ -519,11 +643,22 @@ async function generateViz(skipAnalysis = false) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
         body: JSON.stringify({
-          model: 'gpt-4o', max_tokens: 400,
-          messages: [{ role: 'user', content: [
-            { type: 'image_url', image_url: { url: 'data:image/jpeg;base64,' + photos[0].base64, detail: 'high' } },
-            { type: 'text', text: `Analyze this room photo very precisely. Return ONLY valid JSON, no markdown:\n{\n  "roomType": "room type in German, one word",\n  "cameraAngle": "exact camera position in English: height from floor, angle, direction",\n  "fixedElements": "list every visible fixture/element with its EXACT wall position in English",\n  "renovationMaterials": "modern renovation materials for this room type in English"\n}` }
-          ]}]
+          model: 'gpt-4o',
+          max_tokens: 600,
+          messages: [{
+            role: 'user',
+            content: [
+              { type: 'image_url', image_url: { url: 'data:image/jpeg;base64,' + photos[0].base64, detail: 'high' } },
+              { type: 'text', text: `Analyze this room photo with extreme precision. Return ONLY valid JSON, no markdown:
+{
+  "roomType": "room type in German, one word",
+  "cameraAngle": "exact camera position in English: height from floor, angle, direction",
+  "fixedElements": "every fixture with EXACT position on which wall: e.g. 'corner bathtub in far-left corner touching both left and back wall, wall-mounted toilet on right wall at center, towel radiator on right wall near door, window centered on back wall, door frame on left wall'",
+  "fixtureSizes": "size of each fixture relative to room as percentage of wall: e.g. 'corner bathtub spans ~40% of left wall and ~35% of back wall; toilet occupies ~15% of right wall width; radiator spans ~10% of right wall height; window spans ~30% of back wall width'",
+  "renovationMaterials": "default modern materials if user specifies none: wall tiles, floor tiles, fixtures style"
+}` }
+            ]
+          }]
         })
       });
       const d1 = await r1.json();
@@ -532,22 +667,40 @@ async function generateViz(skipAnalysis = false) {
         if (match) {
           const p = JSON.parse(match[0]);
           if (p.roomType) roomType = p.roomType;
+
+          const materials = userWishes
+            ? `Apply user wishes for materials/colors: "${userWishes}". Default fallback: ${p.renovationMaterials || 'modern European high-end materials'}.`
+            : `Use: ${p.renovationMaterials || 'modern European high-end materials, clean and bright'}.`;
+
           editPrompt = [
             `PHOTO RENOVATION TASK: Edit this photo to show the same room after a modern renovation.`,
-            `CAMERA: Keep the exact camera position unchanged — ${p.cameraAngle || 'same camera angle and height as original'}.`,
-            `KEEP THESE ELEMENTS IN THEIR EXACT POSITIONS — do not move, remove or replace any of them: ${p.fixedElements || 'all fixtures remain in place'}.`,
-            `ONLY UPDATE: wall tiles, floor tiles, ceiling paint, grout, damaged surfaces, stains, mold, water damage. Replace old/damaged materials with: ${p.renovationMaterials || 'modern European high-end materials'}.`,
-            `DO NOT: change camera angle, move walls, relocate fixtures, remove the bathtub/toilet/radiator/windows, or alter room proportions.`,
-            `Result: bright, clean, photorealistic renovation. Soft warm LED ceiling light. No damage, no stains, no mold, no moisture visible.`
+            `CAMERA LOCK: Keep the exact camera position, angle and height unchanged — ${p.cameraAngle || 'same as original'}.`,
+            `POSITION LOCK — keep every fixture on its exact wall at its exact position, do not move anything: ${p.fixedElements || 'all fixtures remain in original position'}.`,
+            `SIZE LOCK — keep every fixture at its exact original size and scale, do not make anything larger or smaller: ${p.fixtureSizes || 'all fixtures keep their original size and proportions'}.`,
+            `ONLY CHANGE: surface materials (tiles, paint, flooring), colors, and finish quality. ${materials}`,
+            `DO NOT: resize any fixture, move any element, change room proportions, alter camera angle, remove windows/doors/radiators, or invent new architectural elements.`,
+            `Result: photorealistic, bright, clean renovation. Soft warm LED lighting. No damage, no stains, no mold.`
           ].join(' ');
-          cachedRoomType = roomType; cachedEditPrompt = editPrompt;
+
+          cachedRoomType   = roomType;
+          cachedEditPrompt = editPrompt;
         }
       }
     } catch (e) { console.warn('Raumanalyse fehlgeschlagen:', e); }
-    if (!editPrompt) editPrompt = cachedEditPrompt || `IMAGE EDITING TASK — DO NOT change camera angle, perspective, room dimensions, wall positions or layout. ONLY replace damaged/stained/moldy surfaces with modern renovation: clean tiles, updated fixtures, bright LED lighting. No damage, no stains, no moisture. Photorealistic.`;
+
+    if (!editPrompt) {
+      editPrompt = cachedEditPrompt || `IMAGE EDITING TASK — POSITION LOCK and SIZE LOCK: do not move or resize any fixture. DO NOT change camera angle, room dimensions or layout. ONLY replace damaged/stained surfaces with modern renovation materials. ${userWishes ? 'User wishes: ' + userWishes + '.' : ''} Photorealistic.`;
+    }
   } else {
+    if (userWishes) {
+      editPrompt = cachedEditPrompt.replace(
+        /ONLY CHANGE:.*?(?=DO NOT:)/,
+        `ONLY CHANGE: surface materials and colors. Apply user wishes: "${userWishes}". `
+      ) || cachedEditPrompt;
+    }
     setVizStep(1); setVizStep(2);
   }
+
   setVizStep(2);
   let imageBlob;
   try {
@@ -560,6 +713,7 @@ async function generateViz(skipAnalysis = false) {
     document.getElementById('vizRegenBtn').disabled = false;
     return;
   }
+
   setVizStep(3);
   try {
     const fd = new FormData();
@@ -569,16 +723,24 @@ async function generateViz(skipAnalysis = false) {
     fd.append('n',       '1');
     fd.append('size',    'auto');
     fd.append('quality', 'high');
+
     const response = await fetch('https://api.openai.com/v1/images/edits', {
-      method: 'POST', headers: { 'Authorization': 'Bearer ' + key }, body: fd
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + key },
+      body: fd
     });
     const data = await response.json();
     if (!response.ok) throw new Error(data.error?.message || 'Bildgenerierung fehlgeschlagen');
-    const item = data.data[0];
+
+    const item   = data.data[0];
     const imgSrc = item.b64_json ? 'data:image/png;base64,' + item.b64_json : item.url;
+
     vizHistory.push(imgSrc);
     renderVizHistory();
-  } catch (e) { showErr('Visualisierung Fehler: ' + e.message); }
+  } catch (e) {
+    showErr('Visualisierung Fehler: ' + e.message);
+  }
+
   document.getElementById('ldViz').classList.remove('on');
   document.getElementById('vizBtn').disabled = false;
   document.getElementById('vizRegenBtn').disabled = false;
@@ -590,11 +752,14 @@ function renderVizHistory() {
       <img src="${src}" alt="Vorschlag ${i + 1}" />
       <p>✨ Vorschlag ${i + 1} – ${cachedRoomType}</p>
     </div>`).join('');
+
   document.getElementById('vizGrid').innerHTML = `
     <div class="viz-item">
       <img src="${photos[0].full}" alt="Vorher" />
       <p>📷 IST-Zustand (Schaden)</p>
-    </div>${variants}`;
+    </div>
+    ${variants}`;
+
   document.getElementById('vizResult').style.display = 'block';
   document.getElementById('vizRegenBtn').style.display = 'inline-flex';
   document.getElementById('vizResult').scrollIntoView({ behavior: 'smooth' });
@@ -605,38 +770,46 @@ function resizeImagePNG(dataUrl, maxSize) {
     const img = new Image();
     img.onload = () => {
       const scale = Math.min(maxSize / img.width, maxSize / img.height, 1);
-      const w = Math.round(img.width * scale);
+      const w = Math.round(img.width  * scale);
       const h = Math.round(img.height * scale);
       const canvas = document.createElement('canvas');
-      canvas.width = w; canvas.height = h;
+      canvas.width  = w;
+      canvas.height = h;
       canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-      canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('PNG-Export fehlgeschlagen')), 'image/png');
+      canvas.toBlob(
+        blob => blob ? resolve(blob) : reject(new Error('PNG-Export fehlgeschlagen')),
+        'image/png'
+      );
     };
     img.onerror = () => reject(new Error('Bild konnte nicht geladen werden'));
     img.src = dataUrl;
   });
 }
 
+// ===== RECHNUNG =====
 function previewInvoice() {
   const nr     = document.getElementById('inv-nr').value || 'RE-2024-001';
   const betrag = parseFloat(document.getElementById('inv-betrag').value || '0');
   const email  = document.getElementById('inv-email').value || '–';
   const obj    = document.getElementById('objekt').value || 'Objekt';
-  document.getElementById('invoicePreview').innerHTML = `
+  const html = `
     <h4>Rechnung ${nr}</h4>
     <p><strong>Empfänger:</strong> ${email}</p>
     <p><strong>Leistung:</strong> Gebäudetrocknung & Sanierung – ${obj}</p>
     <p><strong>Betrag (brutto):</strong> ${betrag.toLocaleString('de-DE', { minimumFractionDigits: 2 })} €</p>
     <p><strong>Netto:</strong> ${(betrag / 1.19).toLocaleString('de-DE', { minimumFractionDigits: 2 })} € · <strong>MwSt 19%:</strong> ${(betrag - betrag / 1.19).toLocaleString('de-DE', { minimumFractionDigits: 2 })} €</p>`;
+  document.getElementById('invoicePreview').innerHTML = html;
   document.getElementById('invoicePreview').classList.add('on');
 }
 function sendInvoice() {
   const email = document.getElementById('inv-email').value;
   if (!email) { showErr('E-Mail fehlt.'); return; }
-  const nr     = document.getElementById('inv-nr').value || 'RE-2024-001';
-  const betrag = document.getElementById('inv-betrag').value || '0';
-  const obj    = document.getElementById('objekt').value || 'Objekt';
-  window.location.href = `mailto:${email}?subject=${encodeURIComponent('Rechnung ' + nr + ' – Gebäudetrocknung Wiegand')}&body=${encodeURIComponent('Sehr geehrte Damen und Herren,\n\nbitte überweisen Sie den Rechnungsbetrag von ' + betrag + ' € für die Sanierungsarbeiten am Objekt "' + obj + '".\n\nRechnungsnummer: ' + nr + '\n\nMit freundlichen Grüßen\nGebäudetrocknung Wiegand\nTel: 01520 88 112 88')}`;
+  const nr      = document.getElementById('inv-nr').value || 'RE-2024-001';
+  const betrag  = document.getElementById('inv-betrag').value || '0';
+  const obj     = document.getElementById('objekt').value || 'Objekt';
+  const subject = encodeURIComponent(`Rechnung ${nr} – Gebäudetrocknung Wiegand`);
+  const body    = encodeURIComponent(`Sehr geehrte Damen und Herren,\n\nbitte überweisen Sie den Rechnungsbetrag von ${betrag} € für die Sanierungsarbeiten am Objekt "${obj}".\n\nRechnungsnummer: ${nr}\n\nMit freundlichen Grüßen\nGebäudetrocknung Wiegand\nTel: 01520 88 112 88`);
+  window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
 }
 function copyResult() {
   navigator.clipboard.writeText(document.getElementById('resultContent').innerText)
