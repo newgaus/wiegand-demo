@@ -142,6 +142,19 @@ body{font-family:'Inter',sans-serif;background:var(--gray-50);color:var(--gray-8
 .reno-rec-status.active{color:var(--red);}
 .reno-transcript{display:none;font-size:11px;color:var(--blue-dark);margin-top:7px;padding:6px 9px;background:var(--blue-light);border-radius:6px;line-height:1.6;}
 .reno-transcript.on{display:block;}
+/* WIZARD */
+.wizard-progress{display:flex;align-items:center;gap:10px;margin-bottom:14px;font-size:12px;font-weight:700;color:var(--blue);}
+.wizard-dots{display:flex;gap:5px;}
+.wizard-dot{width:9px;height:9px;border-radius:50%;background:var(--gray-200);transition:all .3s;}
+.wizard-dot.done{background:var(--green);}
+.wizard-dot.active{background:var(--blue);transform:scale(1.25);}
+.wizard-question{font-size:13px;color:var(--gray-700);background:var(--blue-light);border:1px solid #bfdbfe;border-left:4px solid var(--blue);border-radius:var(--rs);padding:12px 14px;margin:14px 0 10px;line-height:1.8;}
+.wizard-desc{font-size:12px;color:var(--gray-600);background:var(--green-light);border:1px solid #6ee7b7;border-radius:var(--rs);padding:10px 12px;margin:10px 0;line-height:1.6;}
+.wizard-feedback-row{display:flex;gap:8px;align-items:flex-start;}
+.wizard-feedback-row textarea{flex:1;min-height:60px;border:1.5px solid var(--gray-200);border-radius:var(--rs);padding:8px 11px;font-size:13px;font-family:'Inter',sans-serif;outline:none;resize:vertical;line-height:1.6;color:var(--gray-800);}
+.wizard-feedback-row textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(26,86,219,.07);}
+.wizard-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;}
+.wizard-summary-hdr{font-size:14px;font-weight:700;color:var(--green);margin-bottom:14px;display:flex;align-items:center;gap:6px;}
 @media(max-width:768px){
   .g2,.g3,.modes,.invoice-grid{grid-template-columns:1fr;}
   .header{flex-direction:column;gap:10px;align-items:flex-start;}
@@ -149,6 +162,7 @@ body{font-family:'Inter',sans-serif;background:var(--gray-50);color:var(--gray-8
   .audio-card{flex-direction:column;}
   .reno-input-row{flex-direction:column;}
   .reno-rec-wrap{flex-direction:row;}
+  .wizard-actions{flex-direction:column;}
 }
 </style>
 </head>
@@ -207,7 +221,43 @@ body{font-family:'Inter',sans-serif;background:var(--gray-50);color:var(--gray-8
     </div>
     <div class="photos-grid" id="photosGrid"></div>
     <div class="photos-count" id="photosCount"></div>
+    <button class="btn btn-p btn-full" id="startWizardBtn" onclick="startVizWizard()" style="display:none;margin-top:14px;">✨ Verbesserungsvorschlag für jedes Foto erstellen</button>
   </div>
+  <!-- ===== VERBESSERUNGSVORSCHLAG WIZARD ===== -->
+  <div class="card" id="wizardCard" style="display:none;border:2px solid var(--blue);">
+    <div class="sec-title">✨ Verbesserungsvorschlag</div>
+    <div class="wizard-progress">
+      <span id="wizardProgressText">Foto 1 von 1</span>
+      <div class="wizard-dots" id="wizardDots"></div>
+    </div>
+    <div class="loading" id="wizardLoading" style="padding:20px">
+      <div class="spinner"></div>
+      <p>Erstelle Verbesserungsvorschlag... <span>~45s</span></p>
+      <div class="viz-steps">
+        <div class="viz-step" id="wstep1">⏳ Schritt 1: Raum & Elemente analysieren</div>
+        <div class="viz-step" id="wstep2">⏳ Schritt 2: Foto für KI vorbereiten</div>
+        <div class="viz-step" id="wstep3">⏳ Schritt 3: Verbesserungsbild generieren</div>
+      </div>
+    </div>
+    <div id="wizardResult" style="display:none">
+      <div class="viz-grid" id="wizardGrid"></div>
+      <div class="wizard-desc" id="wizardDesc"></div>
+      <div class="wizard-question">💬 Gefällt dir dieser Vorschlag? Schreibe einfach was du ändern möchtest (z.B. andere Farbe, anderes Material, moderner Stil) und ich erstelle sofort ein neues Bild.</div>
+      <div class="wizard-feedback-row">
+        <textarea id="wizardFeedback" placeholder="z.B. Hellere Fliesen, Holzboden statt Steinboden, Anthrazit-Schränke, mehr Grünpflanzen..."></textarea>
+      </div>
+      <div class="wizard-actions">
+        <button class="btn btn-s" onclick="regenerateCurrentWiz()">🔄 Neu generieren</button>
+        <button class="btn btn-p" id="wizardNextBtn" style="display:none" onclick="nextWizPhoto()">→ Weiter zum nächsten Foto</button>
+        <button class="btn btn-g" id="wizardDoneBtn" style="display:none" onclick="finishWizard()">✅ Alle Vorschläge fertig</button>
+      </div>
+    </div>
+    <div id="wizardSummary" style="display:none">
+      <div class="wizard-summary-hdr">✅ Alle Verbesserungsvorschläge erstellt</div>
+      <div class="viz-grid" id="wizardSummaryGrid"></div>
+    </div>
+  </div>
+
   <div class="card">
     <div class="sec-title">🎙️ Sprachbeschreibung <span style="font-size:11px;font-weight:400;color:var(--gray-400);text-transform:none;letter-spacing:0">(unbegrenzte Länge)</span></div>
     <div class="audio-card">
@@ -233,6 +283,10 @@ body{font-family:'Inter',sans-serif;background:var(--gray-50);color:var(--gray-8
         <div class="transcript-box" id="transcriptBox">
           <div class="transcript-lbl">🗒️ Transkript (Whisper KI)</div>
           <div id="transcriptText"></div>
+        </div>
+        <div style="margin-top:10px;">
+          <label style="display:block;font-size:11px;font-weight:600;color:var(--gray-600);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em;">✏️ Oder schriftlich beschreiben (optional)</label>
+          <textarea id="manualDesc" placeholder="z.B. Feuchte Wände im Keller, Schimmelflecken an der Decke, Boden aufgequollen nach Rohrbruch vor 3 Tagen..." style="width:100%;min-height:80px;border:1.5px solid var(--gray-200);border-radius:var(--rs);padding:9px 12px;font-family:'Inter',sans-serif;font-size:13px;color:var(--gray-800);outline:none;transition:border-color .2s;background:white;resize:vertical;line-height:1.6;" onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor='var(--gray-200)'"></textarea>
         </div>
       </div>
     </div>
@@ -337,19 +391,15 @@ let renoAudBlob      = null;
 let renoIsRec        = false;
 let renoMRec         = null;
 let renoAChunks      = [];
+// Wizard-State
+let wizIndex         = 0;
+let wizCachedPrompts = [];
+let wizCachedTypes   = [];
+let wizResults       = [];
 
 // ===== STEP LABELS =====
-const MAIN_STEPS = [
-  'Sprache transkribieren',
-  'Fotos analysieren',
-  'Sanierungskonzept erstellen',
-  'Kostenschätzung berechnen'
-];
-const VIZ_STEPS = [
-  'Raumtyp, Kamerawinkel & Maße analysieren',
-  'Originalfoto für KI-Bearbeitung vorbereiten',
-  'gpt-image-1: Sanierung mit exakt gleicher Perspektive'
-];
+const MAIN_STEPS = ['Sprache transkribieren','Fotos analysieren','Sanierungskonzept erstellen','Kostenschätzung berechnen'];
+const VIZ_STEPS  = ['Raumtyp, Kamerawinkel & Maße analysieren','Originalfoto für KI-Bearbeitung vorbereiten','gpt-image-1: Sanierung mit exakt gleicher Perspektive'];
 
 // ===== HELPERS =====
 function showErr(msg) {
@@ -358,77 +408,64 @@ function showErr(msg) {
   el.className = 'err-bar on';
   setTimeout(() => el.className = 'err-bar', 6000);
 }
-function hideErr() {
-  document.getElementById('errBar').className = 'err-bar';
-}
+function hideErr() { document.getElementById('errBar').className = 'err-bar'; }
 
 function setMainStep(n) {
   for (let i = 1; i <= 4; i++) {
-    const el = document.getElementById('step' + i);
-    if (!el) continue;
-    const label = MAIN_STEPS[i - 1];
-    if (i < n)        { el.className = 'step done';   el.textContent = '✅ ' + label; }
-    else if (i === n) { el.className = 'step active'; el.textContent = '🔄 ' + label; }
-    else              { el.className = 'step';        el.textContent = '⏳ ' + label; }
+    const el = document.getElementById('step' + i); if (!el) continue;
+    const label = MAIN_STEPS[i-1];
+    if (i < n)        { el.className='step done';   el.textContent='✅ '+label; }
+    else if (i === n) { el.className='step active'; el.textContent='🔄 '+label; }
+    else              { el.className='step';        el.textContent='⏳ '+label; }
   }
 }
 function setVizStep(n) {
   for (let i = 1; i <= 3; i++) {
-    const el = document.getElementById('vstep' + i);
-    if (!el) continue;
-    const label = 'Schritt ' + i + ': ' + VIZ_STEPS[i - 1];
-    if (i < n)        { el.className = 'viz-step done';   el.textContent = '✅ ' + label; }
-    else if (i === n) { el.className = 'viz-step active'; el.textContent = '🔄 ' + label; }
-    else              { el.className = 'viz-step';        el.textContent = '⏳ ' + label; }
+    const el = document.getElementById('vstep' + i); if (!el) continue;
+    const label = 'Schritt '+i+': '+VIZ_STEPS[i-1];
+    if (i < n)        { el.className='viz-step done';   el.textContent='✅ '+label; }
+    else if (i === n) { el.className='viz-step active'; el.textContent='🔄 '+label; }
+    else              { el.className='viz-step';        el.textContent='⏳ '+label; }
   }
 }
-
 function formatMarkdown(text) {
   return text
-    .replace(/### (.+)/g, '<h3>$1</h3>')
-    .replace(/## (.+)/g,  '<h3>$1</h3>')
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.+?)\*/g, '<em>$1</em>')
-    .replace(/^- (.+)/gm, '• $1')
-    .replace(/\n/g, '<br>');
+    .replace(/### (.+)/g,'<h3>$1</h3>').replace(/## (.+)/g,'<h3>$1</h3>')
+    .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\*(.+?)\*/g,'<em>$1</em>')
+    .replace(/^- (.+)/gm,'• $1').replace(/\n/g,'<br>');
 }
 
-// ===== MULTI FOTO =====
+// ===== FOTOS =====
 function handleFiles(input) {
-  const files = Array.from(input.files);
-  if (!files.length) return;
+  const files = Array.from(input.files); if (!files.length) return;
   let loaded = 0;
   files.forEach(file => {
     const reader = new FileReader();
     reader.onload = e => {
       photos.push({ base64: e.target.result.split(',')[1], name: file.name, full: e.target.result });
-      loaded++;
-      if (loaded === files.length) renderPhotos();
+      if (++loaded === files.length) renderPhotos();
     };
     reader.readAsDataURL(file);
   });
 }
 function renderPhotos() {
-  vizHistory = []; cachedEditPrompt = ''; cachedRoomType = 'Raum';
-  document.getElementById('vizResult').style.display = 'none';
+  vizHistory=[]; cachedEditPrompt=''; cachedRoomType='Raum';
+  wizResults=[]; wizCachedPrompts=[]; wizCachedTypes=[];
+  document.getElementById('vizResult').style.display  = 'none';
+  document.getElementById('wizardCard').style.display = 'none';
   const regenBtn = document.getElementById('vizRegenBtn');
   if (regenBtn) regenBtn.style.display = 'none';
-  const grid = document.getElementById('photosGrid');
-  grid.innerHTML = photos.map((p, i) => `
+  document.getElementById('startWizardBtn').style.display = photos.length ? 'flex' : 'none';
+  document.getElementById('photosGrid').innerHTML = photos.map((p,i) => `
     <div class="photo-thumb">
       <img src="${p.full}" alt="${p.name}" />
       <button class="del" onclick="removePhoto(${i})">×</button>
-      ${i === 0 ? '<span class="main-badge">Haupt</span>' : ''}
-    </div>
-  `).join('');
-  const count = document.getElementById('photosCount');
-  count.textContent = photos.length > 0 ? `✓ ${photos.length} Foto${photos.length > 1 ? 's' : ''} geladen` : '';
+      ${i===0?'<span class="main-badge">Haupt</span>':''}
+    </div>`).join('');
+  document.getElementById('photosCount').textContent = photos.length > 0 ? `✓ ${photos.length} Foto${photos.length>1?'s':''} geladen` : '';
   document.getElementById('fileInput').value = '';
 }
-function removePhoto(i) {
-  photos.splice(i, 1);
-  renderPhotos();
-}
+function removePhoto(i) { photos.splice(i,1); renderPhotos(); }
 
 // ===== AUDIO =====
 async function toggleRec() {
@@ -436,46 +473,39 @@ async function toggleRec() {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' : 'audio/webm';
-      mRec = new MediaRecorder(stream, { mimeType });
-      aChunks = [];
-      mRec.ondataavailable = e => { if (e.data.size > 0) aChunks.push(e.data); };
+      mRec = new MediaRecorder(stream, { mimeType }); aChunks = [];
+      mRec.ondataavailable = e => { if (e.data.size>0) aChunks.push(e.data); };
       mRec.onstop = () => {
         audBlob = new Blob(aChunks, { type: mimeType });
         document.getElementById('audioPlayer').src = URL.createObjectURL(audBlob);
         document.getElementById('audioPrev').style.display = 'block';
         stream.getTracks().forEach(t => t.stop());
       };
-      mRec.start(500);
-      isRec = true;
-      recSeconds = 0;
-      document.getElementById('recBtn').textContent = '⏹';
+      mRec.start(500); isRec=true; recSeconds=0;
+      document.getElementById('recBtn').textContent='⏹';
       document.getElementById('recBtn').classList.add('rec');
-      document.getElementById('recStatus').textContent = '● Aufnahme';
+      document.getElementById('recStatus').textContent='● Aufnahme';
       document.getElementById('recStatus').classList.add('active');
-      document.getElementById('recTimer').style.display = 'block';
+      document.getElementById('recTimer').style.display='block';
       timerInterval = setInterval(() => {
         recSeconds++;
-        const m = Math.floor(recSeconds / 60);
-        const s = recSeconds % 60;
-        document.getElementById('recTimer').textContent = `${m}:${String(s).padStart(2, '0')}`;
-        document.getElementById('progressFill').style.width = Math.min((recSeconds / 120) * 100, 100) + '%';
-      }, 1000);
-    } catch (e) {
-      showErr('Mikrofon-Zugriff verweigert. Bitte Berechtigung im Browser erteilen.');
-    }
+        const m=Math.floor(recSeconds/60), s=recSeconds%60;
+        document.getElementById('recTimer').textContent=`${m}:${String(s).padStart(2,'0')}`;
+        document.getElementById('progressFill').style.width=Math.min((recSeconds/120)*100,100)+'%';
+      },1000);
+    } catch(e) { showErr('Mikrofon-Zugriff verweigert. Bitte Berechtigung im Browser erteilen.'); }
   } else {
-    mRec.stop(); isRec = false;
-    clearInterval(timerInterval);
-    document.getElementById('recBtn').textContent = '🎙️';
+    mRec.stop(); isRec=false; clearInterval(timerInterval);
+    document.getElementById('recBtn').textContent='🎙️';
     document.getElementById('recBtn').classList.remove('rec');
-    document.getElementById('recStatus').textContent = '✓ Gespeichert';
+    document.getElementById('recStatus').textContent='✓ Gespeichert';
     document.getElementById('recStatus').classList.remove('active');
   }
 }
 
 // ===== MODES =====
 function toggleM(m) {
-  const el = document.getElementById('m-' + m);
+  const el = document.getElementById('m-'+m);
   if (modes.has(m)) { modes.delete(m); el.classList.remove('on'); }
   else              { modes.add(m);    el.classList.add('on');    }
 }
@@ -484,8 +514,9 @@ function toggleM(m) {
 async function runAnalyse() {
   const key = document.getElementById('openaiKey').value.trim();
   if (!key) { showErr('Bitte OpenAI API Key eingeben.'); return; }
-  if (!photos.length && !audBlob) { showErr('Bitte mindestens ein Foto oder Sprachaufnahme bereitstellen.'); return; }
-
+  if (!photos.length && !audBlob && !document.getElementById('manualDesc').value.trim()) {
+    showErr('Bitte mindestens ein Foto, eine Sprachaufnahme oder eine Textbeschreibung bereitstellen.'); return;
+  }
   hideErr();
   document.getElementById('analyzeBtn').disabled = true;
   document.getElementById('loading').classList.add('on');
@@ -497,13 +528,9 @@ async function runAnalyse() {
     try {
       const fd = new FormData();
       fd.append('file', audBlob, 'aufnahme.webm');
-      fd.append('model', 'whisper-1');
-      fd.append('language', 'de');
-      const r = await fetch('https://api.openai.com/v1/audio/transcriptions', {
-        method: 'POST',
-        headers: { 'Authorization': 'Bearer ' + key },
-        body: fd
-      });
+      fd.append('model','whisper-1'); fd.append('language','de');
+      const r = await fetch('https://api.openai.com/v1/audio/transcriptions',
+        { method:'POST', headers:{'Authorization':'Bearer '+key}, body:fd });
       if (r.ok) {
         const d = await r.json();
         if (d.text) {
@@ -512,309 +539,401 @@ async function runAnalyse() {
           document.getElementById('transcriptBox').classList.add('on');
         }
       }
-    } catch (e) { console.warn('Transkription fehlgeschlagen:', e); }
+    } catch(e) { console.warn('Transkription fehlgeschlagen:',e); }
   }
 
   setMainStep(2);
-  const kunde   = document.getElementById('auftraggeber').value || 'Unbekannt';
-  const obj     = document.getElementById('objekt').value || 'Unbekannt';
-  const schaden = document.getElementById('schadensart').value || 'Unbekannt';
-  const flaeche = document.getElementById('flaeche').value || 'unbekannt';
-  const vers    = document.getElementById('versicherung').value || '';
-  const budget  = document.getElementById('budget').value || '';
+  const manualDesc = document.getElementById('manualDesc').value.trim();
+  const kunde=document.getElementById('auftraggeber').value||'Unbekannt';
+  const obj=document.getElementById('objekt').value||'Unbekannt';
+  const schaden=document.getElementById('schadensart').value||'Unbekannt';
+  const flaeche=document.getElementById('flaeche').value||'unbekannt';
+  const vers=document.getElementById('versicherung').value||'';
+  const budget=document.getElementById('budget').value||'';
 
-  const systemPrompt = `Du bist ein erfahrener Bausachverständiger und Gutachter für Gebäudetrocknung und Sanierung.
+  const systemPrompt=`Du bist ein erfahrener Bausachverständiger und Gutachter für Gebäudetrocknung und Sanierung.
 Du erstellst professionelle, strukturierte Berichte für das Unternehmen Gebäudetrocknung Wiegand.
 Formatiere deine Antwort mit ### Überschriften und **fett** für wichtige Punkte.
 Antworte ausschließlich auf Deutsch. Sei präzise, praxisnah und konkret.`;
 
-  let userText = `Analysiere diesen Gebäudeschaden professionell.\n\n**Auftragsdaten:**\n- Objekt: ${obj}\n- Auftraggeber: ${kunde}\n- Schadensart: ${schaden}\n- Fläche: ${flaeche} m²\n- Versicherungsfall: ${vers}\n${budget ? '- Budgetrahmen: ' + budget + ' €' : ''}\n${transcript ? '\n**Mündliche Schadensbeschreibung des Technikers:**\n' + transcript + '\n' : ''}\nErstelle folgende Abschnitte:\n`;
-  if (modes.has('schaden')) userText += `\n### Schadensbeurteilung\n- Sichtbare Schäden detailliert beschreiben\n- Vermutliche Ursache und Schadensausmaß\n- Sofortmaßnahmen die jetzt getroffen werden müssen\n`;
-  if (modes.has('konzept')) userText += `\n### Sanierungskonzept\n- Schritt-für-Schritt Maßnahmenplan\n- Benötigte Geräte und Materialien\n- Realistischer Zeitplan (in Tagen/Wochen)\n`;
-  if (modes.has('kosten'))  userText += `\n### Kostenschätzung\n- Aufgeschlüsselte Kostenpositionen in EUR\n- Gerätekosten, Material, Arbeitszeit separat\n- Gesamtsumme Netto + 19% MwSt = Brutto\n`;
-  if (modes.has('foerder')) userText += `\n### Förderung & Versicherung\n- Versicherungsrelevante Hinweise und Dokumentationstipps\n- Mögliche Förderungen (KfW, BAFA, Landesförderprogramme)\n- Empfehlungen für die Schadensmeldung\n`;
+  let userText=`Analysiere diesen Gebäudeschaden professionell.\n\n**Auftragsdaten:**\n- Objekt: ${obj}\n- Auftraggeber: ${kunde}\n- Schadensart: ${schaden}\n- Fläche: ${flaeche} m²\n- Versicherungsfall: ${vers}\n${budget?'- Budgetrahmen: '+budget+' €':''}\n${transcript?'\n**Mündliche Schadensbeschreibung:**\n'+transcript+'\n':''}${manualDesc?'\n**Schriftliche Schadensbeschreibung:**\n'+manualDesc+'\n':''}\nErstelle folgende Abschnitte:\n`;
+  if (modes.has('schaden')) userText+=`\n### Schadensbeurteilung\n- Sichtbare Schäden detailliert beschreiben\n- Vermutliche Ursache und Schadensausmaß\n- Sofortmaßnahmen die jetzt getroffen werden müssen\n`;
+  if (modes.has('konzept')) userText+=`\n### Sanierungskonzept\n- Schritt-für-Schritt Maßnahmenplan\n- Benötigte Geräte und Materialien\n- Realistischer Zeitplan (in Tagen/Wochen)\n`;
+  if (modes.has('kosten'))  userText+=`\n### Kostenschätzung\n- Aufgeschlüsselte Kostenpositionen in EUR\n- Gerätekosten, Material, Arbeitszeit separat\n- Gesamtsumme Netto + 19% MwSt = Brutto\n`;
+  if (modes.has('foerder')) userText+=`\n### Förderung & Versicherung\n- Versicherungsrelevante Hinweise und Dokumentationstipps\n- Mögliche Förderungen (KfW, BAFA, Landesförderprogramme)\n- Empfehlungen für die Schadensmeldung\n`;
 
-  const parts = [{ type: 'text', text: userText }];
-  for (let i = 0; i < Math.min(photos.length, 4); i++) {
-    parts.push({ type: 'image_url', image_url: { url: 'data:image/jpeg;base64,' + photos[i].base64, detail: 'high' } });
-  }
+  const parts=[{ type:'text', text:userText }];
+  for (let i=0; i<Math.min(photos.length,4); i++)
+    parts.push({ type:'image_url', image_url:{ url:'data:image/jpeg;base64,'+photos[i].base64, detail:'high' }});
 
   setMainStep(3);
   try {
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
-      body: JSON.stringify({
-        model: 'gpt-4o',
-        max_tokens: 2500,
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user',   content: parts }
-        ]
-      })
+    const response = await fetch('https://api.openai.com/v1/chat/completions',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+      body:JSON.stringify({ model:'gpt-4o', max_tokens:2500,
+        messages:[{ role:'system', content:systemPrompt },{ role:'user', content:parts }]})
     });
     const data = await response.json();
-    if (!response.ok) throw new Error(data.error?.message || 'API Fehler ' + response.status);
-
+    if (!response.ok) throw new Error(data.error?.message||'API Fehler '+response.status);
     setMainStep(4);
-    await new Promise(r => setTimeout(r, 500));
-
+    await new Promise(r => setTimeout(r,500));
     lastAnalysis = data.choices[0].message.content;
     document.getElementById('resultContent').innerHTML = formatMarkdown(lastAnalysis);
     document.getElementById('resultCard').classList.add('on');
-    document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth' });
-  } catch (e) {
-    showErr('Analyse-Fehler: ' + e.message);
-  }
+    document.getElementById('resultCard').scrollIntoView({ behavior:'smooth' });
+  } catch(e) { showErr('Analyse-Fehler: '+e.message); }
 
   document.getElementById('loading').classList.remove('on');
   document.getElementById('analyzeBtn').disabled = false;
 }
 
-// ===== VISUALISIERUNG =====
+// ===== RENO WÜNSCHE AUDIO =====
 async function toggleRenoRec() {
   if (!renoIsRec) {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' : 'audio/webm';
-      renoMRec = new MediaRecorder(stream, { mimeType });
-      renoAChunks = [];
-      renoMRec.ondataavailable = e => { if (e.data.size > 0) renoAChunks.push(e.data); };
+      const stream = await navigator.mediaDevices.getUserMedia({ audio:true });
+      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')?'audio/webm;codecs=opus':'audio/webm';
+      renoMRec = new MediaRecorder(stream,{ mimeType }); renoAChunks=[];
+      renoMRec.ondataavailable = e => { if (e.data.size>0) renoAChunks.push(e.data); };
       renoMRec.onstop = () => {
-        renoAudBlob = new Blob(renoAChunks, { type: mimeType });
-        stream.getTracks().forEach(t => t.stop());
-        document.getElementById('renoRecStatus').textContent = '✓ OK';
+        renoAudBlob = new Blob(renoAChunks,{ type:mimeType });
+        stream.getTracks().forEach(t=>t.stop());
+        document.getElementById('renoRecStatus').textContent='✓ OK';
       };
-      renoMRec.start(500);
-      renoIsRec = true;
-      document.getElementById('renoRecBtn').textContent = '⏹';
+      renoMRec.start(500); renoIsRec=true;
+      document.getElementById('renoRecBtn').textContent='⏹';
       document.getElementById('renoRecBtn').classList.add('rec');
-      document.getElementById('renoRecStatus').textContent = '● REC';
+      document.getElementById('renoRecStatus').textContent='● REC';
       document.getElementById('renoRecStatus').classList.add('active');
-    } catch (e) { showErr('Mikrofon-Zugriff verweigert.'); }
+    } catch(e) { showErr('Mikrofon-Zugriff verweigert.'); }
   } else {
-    renoMRec.stop(); renoIsRec = false;
-    document.getElementById('renoRecBtn').textContent = '🎙️';
+    renoMRec.stop(); renoIsRec=false;
+    document.getElementById('renoRecBtn').textContent='🎙️';
     document.getElementById('renoRecBtn').classList.remove('rec');
     document.getElementById('renoRecStatus').classList.remove('active');
   }
 }
 
-async function generateViz(skipAnalysis = false) {
-  const key = document.getElementById('openaiKey').value.trim();
+// ===== VISUALISIERUNG =====
+async function generateViz(skipAnalysis=false) {
+  const key=document.getElementById('openaiKey').value.trim();
   if (!key) { showErr('Bitte OpenAI Key eingeben.'); return; }
   if (!photos.length) { showErr('Bitte zuerst ein Foto hochladen.'); return; }
-
-  document.getElementById('vizBtn').disabled = true;
-  document.getElementById('vizRegenBtn').disabled = true;
+  document.getElementById('vizBtn').disabled=true;
+  document.getElementById('vizRegenBtn').disabled=true;
   document.getElementById('ldViz').classList.add('on');
-  if (!vizHistory.length) document.getElementById('vizResult').style.display = 'none';
+  if (!vizHistory.length) document.getElementById('vizResult').style.display='none';
 
-  let userWishes = document.getElementById('renoWishes').value.trim();
+  let userWishes=document.getElementById('renoWishes').value.trim();
   if (renoAudBlob && !skipAnalysis) {
     try {
-      const wfd = new FormData();
-      wfd.append('file', renoAudBlob, 'wuensche.webm');
-      wfd.append('model', 'whisper-1');
-      wfd.append('language', 'de');
-      const wr = await fetch('https://api.openai.com/v1/audio/transcriptions', {
-        method: 'POST', headers: { 'Authorization': 'Bearer ' + key }, body: wfd
-      });
+      const wfd=new FormData();
+      wfd.append('file',renoAudBlob,'wuensche.webm'); wfd.append('model','whisper-1'); wfd.append('language','de');
+      const wr=await fetch('https://api.openai.com/v1/audio/transcriptions',
+        { method:'POST', headers:{'Authorization':'Bearer '+key}, body:wfd });
       if (wr.ok) {
-        const wd = await wr.json();
+        const wd=await wr.json();
         if (wd.text) {
-          const wt = wd.text.trim();
-          userWishes = userWishes ? userWishes + ' · ' + wt : wt;
-          const el = document.getElementById('renoTranscript');
-          el.textContent = '🎙️ ' + wt;
-          el.classList.add('on');
+          const wt=wd.text.trim();
+          userWishes=userWishes?userWishes+' · '+wt:wt;
+          const el=document.getElementById('renoTranscript');
+          el.textContent='🎙️ '+wt; el.classList.add('on');
         }
       }
-    } catch (e) { console.warn('Wünsche-Transkription fehlgeschlagen:', e); }
+    } catch(e) { console.warn('Wünsche-Transkription fehlgeschlagen:',e); }
   }
 
-  let roomType   = cachedRoomType;
-  let editPrompt = cachedEditPrompt;
-
+  let roomType=cachedRoomType, editPrompt=cachedEditPrompt;
   if (!skipAnalysis || !cachedEditPrompt) {
     setVizStep(1);
     try {
-      const r1 = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
-        body: JSON.stringify({
-          model: 'gpt-4o',
-          max_tokens: 600,
-          messages: [{
-            role: 'user',
-            content: [
-              { type: 'image_url', image_url: { url: 'data:image/jpeg;base64,' + photos[0].base64, detail: 'high' } },
-              { type: 'text', text: `Analyze this room photo with extreme precision. Return ONLY valid JSON, no markdown:
+      const r1=await fetch('https://api.openai.com/v1/chat/completions',{
+        method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+        body:JSON.stringify({ model:'gpt-4o', max_tokens:600,
+          messages:[{ role:'user', content:[
+            { type:'image_url', image_url:{ url:'data:image/jpeg;base64,'+photos[0].base64, detail:'high' }},
+            { type:'text', text:`Analyze this room photo with extreme precision. Return ONLY valid JSON, no markdown:
 {
   "roomType": "room type in German, one word",
   "cameraAngle": "exact camera position in English: height from floor, angle, direction",
-  "fixedElements": "every fixture with EXACT position on which wall: e.g. 'corner bathtub in far-left corner touching both left and back wall, wall-mounted toilet on right wall at center, towel radiator on right wall near door, window centered on back wall, door frame on left wall'",
-  "fixtureSizes": "size of each fixture relative to room as percentage of wall: e.g. 'corner bathtub spans ~40% of left wall and ~35% of back wall; toilet occupies ~15% of right wall width; radiator spans ~10% of right wall height; window spans ~30% of back wall width'",
+  "fixedElements": "every fixture with EXACT position on which wall",
+  "fixtureSizes": "size of each fixture relative to room as percentage of wall",
   "renovationMaterials": "default modern materials if user specifies none: wall tiles, floor tiles, fixtures style"
 }` }
-            ]
-          }]
-        })
+          ]}]})
       });
-      const d1 = await r1.json();
+      const d1=await r1.json();
       if (d1.choices) {
-        const match = d1.choices[0].message.content.trim().match(/\{[\s\S]*\}/);
+        const match=d1.choices[0].message.content.trim().match(/\{[\s\S]*\}/);
         if (match) {
-          const p = JSON.parse(match[0]);
-          if (p.roomType) roomType = p.roomType;
-
-          const materials = userWishes
-            ? `Apply user wishes for materials/colors: "${userWishes}". Default fallback: ${p.renovationMaterials || 'modern European high-end materials'}.`
-            : `Use: ${p.renovationMaterials || 'modern European high-end materials, clean and bright'}.`;
-
-          editPrompt = [
+          const p=JSON.parse(match[0]);
+          if (p.roomType) roomType=p.roomType;
+          const materials=userWishes
+            ?`Apply user wishes for materials/colors: "${userWishes}". Default fallback: ${p.renovationMaterials||'modern European high-end materials'}.`
+            :`Use: ${p.renovationMaterials||'modern European high-end materials, clean and bright'}.`;
+          editPrompt=[
             `PHOTO RENOVATION TASK: Edit this photo to show the same room after a modern renovation.`,
-            `CAMERA LOCK: Keep the exact camera position, angle and height unchanged — ${p.cameraAngle || 'same as original'}.`,
-            `POSITION LOCK — keep every fixture on its exact wall at its exact position, do not move anything: ${p.fixedElements || 'all fixtures remain in original position'}.`,
-            `SIZE LOCK — keep every fixture at its exact original size and scale, do not make anything larger or smaller: ${p.fixtureSizes || 'all fixtures keep their original size and proportions'}.`,
+            `CAMERA LOCK: Keep the exact camera position, angle and height unchanged — ${p.cameraAngle||'same as original'}.`,
+            `POSITION LOCK — keep every fixture on its exact wall at its exact position, do not move anything: ${p.fixedElements||'all fixtures remain in original position'}.`,
+            `SIZE LOCK — keep every fixture at its exact original size and scale, do not make anything larger or smaller: ${p.fixtureSizes||'all fixtures keep their original size and proportions'}.`,
             `ONLY CHANGE: surface materials (tiles, paint, flooring), colors, and finish quality. ${materials}`,
             `DO NOT: resize any fixture, move any element, change room proportions, alter camera angle, remove windows/doors/radiators, or invent new architectural elements.`,
             `Result: photorealistic, bright, clean renovation. Soft warm LED lighting. No damage, no stains, no mold.`
           ].join(' ');
-
-          cachedRoomType   = roomType;
-          cachedEditPrompt = editPrompt;
+          cachedRoomType=roomType; cachedEditPrompt=editPrompt;
         }
       }
-    } catch (e) { console.warn('Raumanalyse fehlgeschlagen:', e); }
-
-    if (!editPrompt) {
-      editPrompt = cachedEditPrompt || `IMAGE EDITING TASK — POSITION LOCK and SIZE LOCK: do not move or resize any fixture. DO NOT change camera angle, room dimensions or layout. ONLY replace damaged/stained surfaces with modern renovation materials. ${userWishes ? 'User wishes: ' + userWishes + '.' : ''} Photorealistic.`;
-    }
+    } catch(e) { console.warn('Raumanalyse fehlgeschlagen:',e); }
+    if (!editPrompt) editPrompt=cachedEditPrompt||`IMAGE EDITING TASK — POSITION LOCK and SIZE LOCK: do not move or resize any fixture. DO NOT change camera angle, room dimensions or layout. ONLY replace damaged/stained surfaces with modern renovation materials. ${userWishes?'User wishes: '+userWishes+'.':''} Photorealistic.`;
   } else {
-    if (userWishes) {
-      editPrompt = cachedEditPrompt.replace(
-        /ONLY CHANGE:.*?(?=DO NOT:)/,
-        `ONLY CHANGE: surface materials and colors. Apply user wishes: "${userWishes}". `
-      ) || cachedEditPrompt;
-    }
+    if (userWishes) editPrompt=cachedEditPrompt.replace(/ONLY CHANGE:.*?(?=DO NOT:)/,`ONLY CHANGE: surface materials and colors. Apply user wishes: "${userWishes}". `)||cachedEditPrompt;
     setVizStep(1); setVizStep(2);
   }
 
   setVizStep(2);
   let imageBlob;
   try {
-    imageBlob = await resizeImagePNG(photos[0].full, 1024);
-    if (imageBlob.size > 20 * 1024 * 1024) throw new Error('Foto ist zu groß (max. 20 MB).');
-  } catch (e) {
-    showErr('Bild-Vorbereitung fehlgeschlagen: ' + e.message);
+    imageBlob=await resizeImagePNG(photos[0].full,1024);
+    if (imageBlob.size>20*1024*1024) throw new Error('Foto ist zu groß (max. 20 MB).');
+  } catch(e) {
+    showErr('Bild-Vorbereitung fehlgeschlagen: '+e.message);
     document.getElementById('ldViz').classList.remove('on');
-    document.getElementById('vizBtn').disabled = false;
-    document.getElementById('vizRegenBtn').disabled = false;
+    document.getElementById('vizBtn').disabled=false;
+    document.getElementById('vizRegenBtn').disabled=false;
     return;
   }
 
   setVizStep(3);
   try {
-    const fd = new FormData();
-    fd.append('model',   'gpt-image-1');
-    fd.append('image[]', imageBlob, 'room.png');
-    fd.append('prompt',  editPrompt);
-    fd.append('n',       '1');
-    fd.append('size',    'auto');
-    fd.append('quality', 'high');
-
-    const response = await fetch('https://api.openai.com/v1/images/edits', {
-      method: 'POST',
-      headers: { 'Authorization': 'Bearer ' + key },
-      body: fd
-    });
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.error?.message || 'Bildgenerierung fehlgeschlagen');
-
-    const item   = data.data[0];
-    const imgSrc = item.b64_json ? 'data:image/png;base64,' + item.b64_json : item.url;
-
+    const fd=new FormData();
+    fd.append('model','gpt-image-1'); fd.append('image[]',imageBlob,'room.png');
+    fd.append('prompt',editPrompt); fd.append('n','1'); fd.append('size','auto'); fd.append('quality','high');
+    const response=await fetch('https://api.openai.com/v1/images/edits',
+      { method:'POST', headers:{'Authorization':'Bearer '+key}, body:fd });
+    const data=await response.json();
+    if (!response.ok) throw new Error(data.error?.message||'Bildgenerierung fehlgeschlagen');
+    const item=data.data[0];
+    const imgSrc=item.b64_json?'data:image/png;base64,'+item.b64_json:item.url;
     vizHistory.push(imgSrc);
     renderVizHistory();
-  } catch (e) {
-    showErr('Visualisierung Fehler: ' + e.message);
-  }
+  } catch(e) { showErr('Visualisierung Fehler: '+e.message); }
 
   document.getElementById('ldViz').classList.remove('on');
-  document.getElementById('vizBtn').disabled = false;
-  document.getElementById('vizRegenBtn').disabled = false;
+  document.getElementById('vizBtn').disabled=false;
+  document.getElementById('vizRegenBtn').disabled=false;
 }
 
 function renderVizHistory() {
-  const variants = vizHistory.map((src, i) => `
+  const variants=vizHistory.map((src,i)=>`
     <div class="viz-item">
-      <img src="${src}" alt="Vorschlag ${i + 1}" />
-      <p>✨ Vorschlag ${i + 1} – ${cachedRoomType}</p>
+      <img src="${src}" alt="Vorschlag ${i+1}" />
+      <p>✨ Vorschlag ${i+1} – ${cachedRoomType}</p>
     </div>`).join('');
-
-  document.getElementById('vizGrid').innerHTML = `
+  document.getElementById('vizGrid').innerHTML=`
     <div class="viz-item">
       <img src="${photos[0].full}" alt="Vorher" />
       <p>📷 IST-Zustand (Schaden)</p>
-    </div>
-    ${variants}`;
-
-  document.getElementById('vizResult').style.display = 'block';
-  document.getElementById('vizRegenBtn').style.display = 'inline-flex';
-  document.getElementById('vizResult').scrollIntoView({ behavior: 'smooth' });
+    </div>${variants}`;
+  document.getElementById('vizResult').style.display='block';
+  document.getElementById('vizRegenBtn').style.display='inline-flex';
+  document.getElementById('vizResult').scrollIntoView({ behavior:'smooth' });
 }
 
 function resizeImagePNG(dataUrl, maxSize) {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => {
-      const scale = Math.min(maxSize / img.width, maxSize / img.height, 1);
-      const w = Math.round(img.width  * scale);
-      const h = Math.round(img.height * scale);
-      const canvas = document.createElement('canvas');
-      canvas.width  = w;
-      canvas.height = h;
-      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-      canvas.toBlob(
-        blob => blob ? resolve(blob) : reject(new Error('PNG-Export fehlgeschlagen')),
-        'image/png'
-      );
+  return new Promise((resolve,reject) => {
+    const img=new Image();
+    img.onload=() => {
+      const scale=Math.min(maxSize/img.width,maxSize/img.height,1);
+      const w=Math.round(img.width*scale), h=Math.round(img.height*scale);
+      const canvas=document.createElement('canvas');
+      canvas.width=w; canvas.height=h;
+      canvas.getContext('2d').drawImage(img,0,0,w,h);
+      canvas.toBlob(blob=>blob?resolve(blob):reject(new Error('PNG-Export fehlgeschlagen')),'image/png');
     };
-    img.onerror = () => reject(new Error('Bild konnte nicht geladen werden'));
-    img.src = dataUrl;
+    img.onerror=()=>reject(new Error('Bild konnte nicht geladen werden'));
+    img.src=dataUrl;
   });
+}
+
+// ===== VERBESSERUNGSVORSCHLAG WIZARD =====
+const WIZ_STEPS=['Raum & Elemente analysieren','Foto für KI vorbereiten','Verbesserungsbild generieren'];
+
+function setWizStep(n) {
+  for (let i=1; i<=3; i++) {
+    const el=document.getElementById('wstep'+i); if (!el) continue;
+    const label='Schritt '+i+': '+WIZ_STEPS[i-1];
+    if (i<n)        { el.className='viz-step done';   el.textContent='✅ '+label; }
+    else if (i===n) { el.className='viz-step active'; el.textContent='🔄 '+label; }
+    else            { el.className='viz-step';        el.textContent='⏳ '+label; }
+  }
+}
+
+function updateWizardProgress() {
+  document.getElementById('wizardProgressText').textContent=`Foto ${wizIndex+1} von ${photos.length}`;
+  document.getElementById('wizardDots').innerHTML=photos.map((_,i)=>
+    `<div class="wizard-dot ${i<wizIndex?'done':i===wizIndex?'active':''}"></div>`).join('');
+  const isLast=wizIndex===photos.length-1;
+  document.getElementById('wizardNextBtn').style.display=isLast?'none':'inline-flex';
+  document.getElementById('wizardDoneBtn').style.display=isLast?'inline-flex':'none';
+}
+
+async function startVizWizard() {
+  const key=document.getElementById('openaiKey').value.trim();
+  if (!key)          { showErr('Bitte OpenAI API Key eingeben.');  return; }
+  if (!photos.length){ showErr('Bitte zuerst Fotos hochladen.');   return; }
+  wizIndex=0;
+  wizCachedPrompts=new Array(photos.length).fill('');
+  wizCachedTypes=new Array(photos.length).fill('Raum');
+  wizResults=[];
+  document.getElementById('wizardCard').style.display='block';
+  document.getElementById('wizardSummary').style.display='none';
+  document.getElementById('wizardResult').style.display='none';
+  document.getElementById('wizardCard').scrollIntoView({ behavior:'smooth' });
+  await generateWizPhoto(0);
+}
+
+async function generateWizPhoto(index, feedback='') {
+  const key=document.getElementById('openaiKey').value.trim();
+  if (!key) { showErr('Bitte OpenAI API Key eingeben.'); return; }
+  wizIndex=index; updateWizardProgress();
+  document.getElementById('wizardLoading').classList.add('on');
+  document.getElementById('wizardResult').style.display='none';
+  document.getElementById('wizardFeedback').value='';
+
+  let editPrompt=feedback?'':wizCachedPrompts[index];
+  let roomType=wizCachedTypes[index]||'Raum';
+
+  if (!editPrompt||feedback) {
+    setWizStep(1);
+    try {
+      const r1=await fetch('https://api.openai.com/v1/chat/completions',{
+        method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+        body:JSON.stringify({ model:'gpt-4o', max_tokens:600,
+          messages:[{ role:'user', content:[
+            { type:'image_url', image_url:{ url:'data:image/jpeg;base64,'+photos[index].base64, detail:'high' }},
+            { type:'text', text:`Analyze this room photo with extreme precision. Return ONLY valid JSON, no markdown:
+{
+  "roomType": "room type in German, one word",
+  "cameraAngle": "exact camera position: height, angle, direction",
+  "fixedElements": "every fixture with EXACT wall position",
+  "fixtureSizes": "size of each fixture as % of wall",
+  "renovationMaterials": "default modern materials: wall tiles, floor tiles, fixtures style"
+}` }
+          ]}]})
+      });
+      const d1=await r1.json();
+      if (d1.choices) {
+        const match=d1.choices[0].message.content.trim().match(/\{[\s\S]*\}/);
+        if (match) {
+          const p=JSON.parse(match[0]);
+          if (p.roomType) { roomType=p.roomType; wizCachedTypes[index]=roomType; }
+          const materials=feedback
+            ?`Apply ONLY these user changes: "${feedback}". Keep everything else as default modern renovation: ${p.renovationMaterials||'modern European high-end materials'}.`
+            :`Use: ${p.renovationMaterials||'modern European high-end materials, clean and bright'}.`;
+          editPrompt=[
+            `PHOTO RENOVATION TASK: Edit this photo to show the same room after a modern renovation.`,
+            `CAMERA LOCK: Keep the exact camera position, angle and height — ${p.cameraAngle||'same as original'}.`,
+            `POSITION LOCK — keep every fixture on its exact wall at its exact position: ${p.fixedElements||'all fixtures remain'}.`,
+            `SIZE LOCK — keep every fixture at its exact original size: ${p.fixtureSizes||'all sizes unchanged'}.`,
+            `ONLY CHANGE: surface materials (tiles, paint, flooring), colors, finish quality. ${materials}`,
+            `DO NOT: resize any fixture, move elements, change room proportions, alter camera angle.`,
+            `Result: photorealistic, bright, clean renovation. Soft warm LED lighting. No damage, no stains.`
+          ].join(' ');
+          if (!feedback) wizCachedPrompts[index]=editPrompt;
+        }
+      }
+    } catch(e) { console.warn('Wizard-Analyse fehlgeschlagen:',e); }
+    if (!editPrompt) editPrompt=feedback
+      ?`POSITION LOCK and SIZE LOCK. Apply only: "${feedback}". Keep rest unchanged. Photorealistic renovation.`
+      :`POSITION LOCK and SIZE LOCK. Modern renovation, clean surfaces, same camera angle. Photorealistic.`;
+  }
+
+  setWizStep(2);
+  let imageBlob;
+  try { imageBlob=await resizeImagePNG(photos[index].full,1024); }
+  catch(e) { showErr('Bild-Vorbereitung fehlgeschlagen: '+e.message); document.getElementById('wizardLoading').classList.remove('on'); return; }
+
+  setWizStep(3);
+  try {
+    const fd=new FormData();
+    fd.append('model','gpt-image-1'); fd.append('image[]',imageBlob,'room.png');
+    fd.append('prompt',editPrompt); fd.append('n','1'); fd.append('size','auto'); fd.append('quality','high');
+    const response=await fetch('https://api.openai.com/v1/images/edits',
+      { method:'POST', headers:{'Authorization':'Bearer '+key}, body:fd });
+    const data=await response.json();
+    if (!response.ok) throw new Error(data.error?.message||'Bildgenerierung fehlgeschlagen');
+    const item=data.data[0];
+    const imgSrc=item.b64_json?'data:image/png;base64,'+item.b64_json:item.url;
+    wizResults[index]={ original:photos[index].full, result:imgSrc, roomType };
+    document.getElementById('wizardGrid').innerHTML=`
+      <div class="viz-item">
+        <img src="${photos[index].full}" alt="Vorher" />
+        <p>📷 IST-Zustand – Foto ${index+1}</p>
+      </div>
+      <div class="viz-item">
+        <img src="${imgSrc}" alt="Vorschlag" />
+        <p>✨ Verbesserungsvorschlag – ${roomType}</p>
+      </div>`;
+    document.getElementById('wizardDesc').textContent=feedback
+      ?`✅ Änderungen umgesetzt: "${feedback}" – Gleiche Raumgeometrie und alle Positionen beibehalten.`
+      :`✅ Moderner Renovierungsvorschlag für ${roomType} generiert – Oberflächen erneuert, Kamerawinkel & Maße identisch.`;
+    document.getElementById('wizardResult').style.display='block';
+    document.getElementById('wizardResult').scrollIntoView({ behavior:'smooth' });
+  } catch(e) { showErr('Visualisierung Fehler: '+e.message); }
+  document.getElementById('wizardLoading').classList.remove('on');
+}
+
+async function regenerateCurrentWiz() {
+  await generateWizPhoto(wizIndex, document.getElementById('wizardFeedback').value.trim());
+}
+async function nextWizPhoto() {
+  if (wizIndex<photos.length-1) await generateWizPhoto(wizIndex+1);
+}
+function finishWizard() {
+  document.getElementById('wizardSummaryGrid').innerHTML=wizResults.map((r,i)=>`
+    <div class="viz-item">
+      <img src="${r.original}" alt="Vorher ${i+1}" />
+      <p>📷 Vorher – Foto ${i+1}</p>
+    </div>
+    <div class="viz-item">
+      <img src="${r.result}" alt="Nachher ${i+1}" />
+      <p>✨ Nachher – ${r.roomType}</p>
+    </div>`).join('');
+  document.getElementById('wizardResult').style.display='none';
+  document.getElementById('wizardLoading').classList.remove('on');
+  document.getElementById('wizardSummary').style.display='block';
+  document.getElementById('wizardSummary').scrollIntoView({ behavior:'smooth' });
 }
 
 // ===== RECHNUNG =====
 function previewInvoice() {
-  const nr     = document.getElementById('inv-nr').value || 'RE-2024-001';
-  const betrag = parseFloat(document.getElementById('inv-betrag').value || '0');
-  const email  = document.getElementById('inv-email').value || '–';
-  const obj    = document.getElementById('objekt').value || 'Objekt';
-  const html = `
+  const nr=document.getElementById('inv-nr').value||'RE-2024-001';
+  const betrag=parseFloat(document.getElementById('inv-betrag').value||'0');
+  const email=document.getElementById('inv-email').value||'–';
+  const obj=document.getElementById('objekt').value||'Objekt';
+  document.getElementById('invoicePreview').innerHTML=`
     <h4>Rechnung ${nr}</h4>
     <p><strong>Empfänger:</strong> ${email}</p>
     <p><strong>Leistung:</strong> Gebäudetrocknung & Sanierung – ${obj}</p>
-    <p><strong>Betrag (brutto):</strong> ${betrag.toLocaleString('de-DE', { minimumFractionDigits: 2 })} €</p>
-    <p><strong>Netto:</strong> ${(betrag / 1.19).toLocaleString('de-DE', { minimumFractionDigits: 2 })} € · <strong>MwSt 19%:</strong> ${(betrag - betrag / 1.19).toLocaleString('de-DE', { minimumFractionDigits: 2 })} €</p>`;
-  document.getElementById('invoicePreview').innerHTML = html;
+    <p><strong>Betrag (brutto):</strong> ${betrag.toLocaleString('de-DE',{minimumFractionDigits:2})} €</p>
+    <p><strong>Netto:</strong> ${(betrag/1.19).toLocaleString('de-DE',{minimumFractionDigits:2})} € · <strong>MwSt 19%:</strong> ${(betrag-betrag/1.19).toLocaleString('de-DE',{minimumFractionDigits:2})} €</p>`;
   document.getElementById('invoicePreview').classList.add('on');
 }
 function sendInvoice() {
-  const email = document.getElementById('inv-email').value;
+  const email=document.getElementById('inv-email').value;
   if (!email) { showErr('E-Mail fehlt.'); return; }
-  const nr      = document.getElementById('inv-nr').value || 'RE-2024-001';
-  const betrag  = document.getElementById('inv-betrag').value || '0';
-  const obj     = document.getElementById('objekt').value || 'Objekt';
-  const subject = encodeURIComponent(`Rechnung ${nr} – Gebäudetrocknung Wiegand`);
-  const body    = encodeURIComponent(`Sehr geehrte Damen und Herren,\n\nbitte überweisen Sie den Rechnungsbetrag von ${betrag} € für die Sanierungsarbeiten am Objekt "${obj}".\n\nRechnungsnummer: ${nr}\n\nMit freundlichen Grüßen\nGebäudetrocknung Wiegand\nTel: 01520 88 112 88`);
-  window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
+  const nr=document.getElementById('inv-nr').value||'RE-2024-001';
+  const betrag=document.getElementById('inv-betrag').value||'0';
+  const obj=document.getElementById('objekt').value||'Objekt';
+  const subject=encodeURIComponent(`Rechnung ${nr} – Gebäudetrocknung Wiegand`);
+  const body=encodeURIComponent(`Sehr geehrte Damen und Herren,\n\nbitte überweisen Sie den Rechnungsbetrag von ${betrag} € für die Sanierungsarbeiten am Objekt "${obj}".\n\nRechnungsnummer: ${nr}\n\nMit freundlichen Grüßen\nGebäudetrocknung Wiegand\nTel: 01520 88 112 88`);
+  window.location.href=`mailto:${email}?subject=${subject}&body=${body}`;
 }
 function copyResult() {
   navigator.clipboard.writeText(document.getElementById('resultContent').innerText)
-    .then(() => alert('Analyse in die Zwischenablage kopiert!'))
-    .catch(() => showErr('Kopieren fehlgeschlagen.'));
+    .then(()=>alert('Analyse in die Zwischenablage kopiert!'))
+    .catch(()=>showErr('Kopieren fehlgeschlagen.'));
 }
 </script>
 </body>
