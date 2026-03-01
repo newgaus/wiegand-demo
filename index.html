@@ -126,6 +126,21 @@ body{font-family:'Inter',sans-serif;background:var(--gray-50);color:var(--gray-8
 .err-bar.on{display:block;}
 .progress-bar{height:3px;background:var(--gray-100);border-radius:2px;margin-top:8px;overflow:hidden;}
 .progress-fill{height:100%;background:var(--blue);border-radius:2px;transition:width .3s;width:0%;}
+/* INSPIRATIONS-FOTO */
+.insp-upload{border:2px dashed var(--gray-300);border-radius:var(--rs);padding:12px 16px;cursor:pointer;transition:all .2s;position:relative;background:var(--gray-50);display:flex;align-items:center;gap:10px;}
+.insp-upload:hover{border-color:var(--blue);background:var(--blue-light);}
+.insp-upload input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.insp-upload .insp-icon{font-size:1.4rem;flex-shrink:0;}
+.insp-upload p{color:var(--gray-500);font-size:12px;text-align:left;line-height:1.5;}
+.insp-upload p span{color:var(--blue);font-weight:600;}
+.insp-thumb-wrap{display:flex;align-items:center;gap:12px;padding:10px;background:var(--blue-light);border:1px solid #bfdbfe;border-radius:var(--rs);margin-top:10px;}
+.insp-thumb-wrap img{width:72px;height:72px;object-fit:cover;border-radius:6px;border:2px solid var(--blue);}
+.insp-thumb-wrap .insp-info{flex:1;}
+.insp-thumb-wrap .insp-info strong{font-size:12px;color:var(--blue-dark);display:block;margin-bottom:2px;}
+.insp-thumb-wrap .insp-info span{font-size:11px;color:var(--gray-500);}
+.insp-thumb-wrap .insp-del{background:none;border:none;color:var(--red);font-size:1.2rem;cursor:pointer;padding:4px;border-radius:4px;flex-shrink:0;}
+.insp-thumb-wrap .insp-del:hover{background:var(--red-light);}
+/* RENOVIERUNGSWÜNSCHE */
 .reno-wishes-wrap{background:white;border:1.5px solid #bfdbfe;border-radius:var(--rs);padding:12px 14px;margin-bottom:14px;}
 .reno-wishes-label{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
 .reno-wishes-label strong{font-size:11px;font-weight:700;color:var(--blue-dark);text-transform:uppercase;letter-spacing:.05em;}
@@ -149,7 +164,7 @@ body{font-family:'Inter',sans-serif;background:var(--gray-50);color:var(--gray-8
 .wizard-dot.done{background:var(--green);}
 .wizard-dot.active{background:var(--blue);transform:scale(1.25);}
 .wizard-question{font-size:13px;color:var(--gray-700);background:var(--blue-light);border:1px solid #bfdbfe;border-left:4px solid var(--blue);border-radius:var(--rs);padding:12px 14px;margin:14px 0 10px;line-height:1.8;}
-.wizard-desc{font-size:12px;color:var(--gray-600);background:var(--green-light);border:1px solid #6ee7b7;border-radius:var(--rs);padding:10px 12px;margin:10px 0;line-height:1.6;}
+.wizard-desc{font-size:12px;color:var(--gray-600);background:var(--green-light);border:1px solid #6ee7b7;border-radius:var(--rs);padding:10px 12px;margin:10px 0;line-height:1.8;}
 .wizard-feedback-row{display:flex;gap:8px;align-items:flex-start;}
 .wizard-feedback-row textarea{flex:1;min-height:60px;border:1.5px solid var(--gray-200);border-radius:var(--rs);padding:8px 11px;font-size:13px;font-family:'Inter',sans-serif;outline:none;resize:vertical;line-height:1.6;color:var(--gray-800);}
 .wizard-feedback-row textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(26,86,219,.07);}
@@ -182,6 +197,8 @@ body{font-family:'Inter',sans-serif;background:var(--gray-50);color:var(--gray-8
 </div>
 <div class="main">
   <div class="err-bar" id="errBar"></div>
+
+  <!-- OBJEKTDATEN -->
   <div class="card">
     <div class="sec-title">📍 Objektdaten</div>
     <div class="g3" style="margin-bottom:12px">
@@ -211,6 +228,8 @@ body{font-family:'Inter',sans-serif;background:var(--gray-50);color:var(--gray-8
       <div class="field"><label>Kostenschätzung Ziel (€)</label><input type="number" id="budget" placeholder="z.B. 5000" /></div>
     </div>
   </div>
+
+  <!-- FOTOS -->
   <div class="card">
     <div class="sec-title">📸 Fotos des Schadens <span style="font-size:11px;font-weight:400;color:var(--gray-400);text-transform:none;letter-spacing:0">(mehrere möglich – erstes Foto = Hauptbild für 3D)</span></div>
     <div class="upload-area" id="uploadArea">
@@ -221,9 +240,20 @@ body{font-family:'Inter',sans-serif;background:var(--gray-50);color:var(--gray-8
     </div>
     <div class="photos-grid" id="photosGrid"></div>
     <div class="photos-count" id="photosCount"></div>
+    <!-- INSPIRATIONS-FOTO -->
+    <div style="margin-top:16px;border-top:1px solid var(--gray-100);padding-top:14px;">
+      <div style="font-size:11px;font-weight:700;color:var(--gray-600);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">🖼️ Inspirations-Foto <span style="font-size:10px;font-weight:400;color:var(--gray-400);text-transform:none;letter-spacing:0">(optional – zeigt der KI welchen Stil du dir wünschst)</span></div>
+      <div class="insp-upload" id="inspUploadArea">
+        <input type="file" id="inspirationInput" accept="image/*" onchange="handleInspirationFile(this)" />
+        <div class="insp-icon">🖼️</div>
+        <p>z.B. ein modernes dunkles Bad, eine helle Küche aus Pinterest...<br><span>Inspirationsbild auswählen</span></p>
+      </div>
+      <div id="inspirationThumb" style="display:none"></div>
+    </div>
     <button class="btn btn-p btn-full" id="startWizardBtn" onclick="startVizWizard()" style="display:none;margin-top:14px;">✨ Verbesserungsvorschlag für jedes Foto erstellen</button>
   </div>
-  <!-- ===== VERBESSERUNGSVORSCHLAG WIZARD ===== -->
+
+  <!-- WIZARD -->
   <div class="card" id="wizardCard" style="display:none;border:2px solid var(--blue);">
     <div class="sec-title">✨ Verbesserungsvorschlag</div>
     <div class="wizard-progress">
@@ -244,7 +274,7 @@ body{font-family:'Inter',sans-serif;background:var(--gray-50);color:var(--gray-8
       <div class="wizard-desc" id="wizardDesc"></div>
       <div class="wizard-question">💬 Gefällt dir dieser Vorschlag? Schreibe einfach was du ändern möchtest (z.B. andere Farbe, anderes Material, moderner Stil) und ich erstelle sofort ein neues Bild.</div>
       <div class="wizard-feedback-row">
-        <textarea id="wizardFeedback" placeholder="z.B. Hellere Fliesen, Holzboden statt Steinboden, Anthrazit-Schränke, mehr Grünpflanzen..."></textarea>
+        <textarea id="wizardFeedback" placeholder="z.B. Hellere Fliesen, Holzboden statt Steinboden, Anthrazit-Schränke..."></textarea>
       </div>
       <div class="wizard-actions">
         <button class="btn btn-s" onclick="regenerateCurrentWiz()">🔄 Neu generieren</button>
@@ -258,6 +288,7 @@ body{font-family:'Inter',sans-serif;background:var(--gray-50);color:var(--gray-8
     </div>
   </div>
 
+  <!-- SPRACHBESCHREIBUNG -->
   <div class="card">
     <div class="sec-title">🎙️ Sprachbeschreibung <span style="font-size:11px;font-weight:400;color:var(--gray-400);text-transform:none;letter-spacing:0">(unbegrenzte Länge)</span></div>
     <div class="audio-card">
@@ -286,11 +317,13 @@ body{font-family:'Inter',sans-serif;background:var(--gray-50);color:var(--gray-8
         </div>
         <div style="margin-top:10px;">
           <label style="display:block;font-size:11px;font-weight:600;color:var(--gray-600);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em;">✏️ Oder schriftlich beschreiben (optional)</label>
-          <textarea id="manualDesc" placeholder="z.B. Feuchte Wände im Keller, Schimmelflecken an der Decke, Boden aufgequollen nach Rohrbruch vor 3 Tagen..." style="width:100%;min-height:80px;border:1.5px solid var(--gray-200);border-radius:var(--rs);padding:9px 12px;font-family:'Inter',sans-serif;font-size:13px;color:var(--gray-800);outline:none;transition:border-color .2s;background:white;resize:vertical;line-height:1.6;" onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor='var(--gray-200)'"></textarea>
+          <textarea id="manualDesc" placeholder="z.B. Feuchte Wände im Keller, Schimmelflecken an der Decke..." style="width:100%;min-height:80px;border:1.5px solid var(--gray-200);border-radius:var(--rs);padding:9px 12px;font-family:'Inter',sans-serif;font-size:13px;color:var(--gray-800);outline:none;transition:border-color .2s;background:white;resize:vertical;line-height:1.6;" onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor='var(--gray-200)'"></textarea>
         </div>
       </div>
     </div>
   </div>
+
+  <!-- ANALYSE-MODI -->
   <div class="card">
     <div class="sec-title">⚙️ Was soll erstellt werden?</div>
     <div class="modes">
@@ -301,6 +334,7 @@ body{font-family:'Inter',sans-serif;background:var(--gray-50);color:var(--gray-8
     </div>
     <button class="btn btn-p btn-full" id="analyzeBtn" onclick="runAnalyse()">🔍 KI-Analyse starten</button>
   </div>
+
   <div class="loading" id="loading">
     <div class="spinner"></div>
     <p id="ldText">Analysiere... <span>Bitte warten</span></p>
@@ -311,6 +345,8 @@ body{font-family:'Inter',sans-serif;background:var(--gray-50);color:var(--gray-8
       <div class="step" id="step4">⏳ Kostenschätzung berechnen</div>
     </div>
   </div>
+
+  <!-- ERGEBNIS -->
   <div class="card result-box" id="resultCard">
     <div class="result-hdr">
       <div class="result-title">✅ Analyse abgeschlossen</div>
@@ -333,7 +369,7 @@ body{font-family:'Inter',sans-serif;background:var(--gray-50);color:var(--gray-8
           <span>optional · Fliesen, Farben, Möbelposition, Stil...</span>
         </div>
         <div class="reno-input-row">
-          <textarea id="renoWishes" placeholder="z.B. Weiße großformatige Fliesen · Badewanne auf der linken Seite behalten · Waschtisch-Unterschrank in Anthrazit · Heller Holzboden · Regendusche rechts · Moderne graue Akzentwand"></textarea>
+          <textarea id="renoWishes" placeholder="z.B. Weiße großformatige Fliesen · Anthrazit-Schränke · Heller Holzboden · Regendusche rechts..."></textarea>
           <div class="reno-rec-wrap">
             <button class="reno-rec-btn" id="renoRecBtn" onclick="toggleRenoRec()" title="Wünsche einsprechen">🎙️</button>
             <span class="reno-rec-status" id="renoRecStatus">Sprechen</span>
@@ -375,566 +411,173 @@ body{font-family:'Inter',sans-serif;background:var(--gray-50);color:var(--gray-8
     </div>
   </div>
 </div>
+
 <script>
 // ===== STATE =====
 let photos = [];
-let audBlob = null, isRec = false;
-let mRec = null, aChunks = [];
+let audBlob = null, isRec = false, mRec = null, aChunks = [];
 let timerInterval = null, recSeconds = 0;
 let modes = new Set(['schaden','konzept','kosten','foerder']);
-let lastAnalysis = '';
-let transcript = '';
-let vizHistory       = [];
-let cachedEditPrompt = '';
-let cachedRoomType   = 'Raum';
-let renoAudBlob      = null;
-let renoIsRec        = false;
-let renoMRec         = null;
-let renoAChunks      = [];
-// Wizard-State
-let wizIndex         = 0;
-let wizCachedPrompts = [];
-let wizCachedTypes   = [];
-let wizResults       = [];
+let lastAnalysis = '', transcript = '';
+let vizHistory = [], cachedEditPrompt = '', cachedRoomType = 'Raum';
+let renoAudBlob = null, renoIsRec = false, renoMRec = null, renoAChunks = [];
+let wizIndex = 0, wizCachedPrompts = [], wizCachedTypes = [], wizCachedAnalysis = [], wizResults = [];
+let cachedRoomAnalysis = null;
+let inspirationPhoto = null, inspirationStyle = null;
 
-// ===== STEP LABELS =====
 const MAIN_STEPS = ['Sprache transkribieren','Fotos analysieren','Sanierungskonzept erstellen','Kostenschätzung berechnen'];
 const VIZ_STEPS  = ['Raumtyp, Kamerawinkel & Maße analysieren','Originalfoto für KI-Bearbeitung vorbereiten','gpt-image-1: Sanierung mit exakt gleicher Perspektive'];
+const WIZ_STEPS  = ['Raum & Elemente analysieren','Foto für KI vorbereiten','Verbesserungsbild generieren'];
 
-// ===== HELPERS =====
-function showErr(msg) {
-  const el = document.getElementById('errBar');
-  el.textContent = '❌ ' + msg;
-  el.className = 'err-bar on';
-  setTimeout(() => el.className = 'err-bar', 6000);
-}
-function hideErr() { document.getElementById('errBar').className = 'err-bar'; }
-
-function setMainStep(n) {
-  for (let i = 1; i <= 4; i++) {
-    const el = document.getElementById('step' + i); if (!el) continue;
-    const label = MAIN_STEPS[i-1];
-    if (i < n)        { el.className='step done';   el.textContent='✅ '+label; }
-    else if (i === n) { el.className='step active'; el.textContent='🔄 '+label; }
-    else              { el.className='step';        el.textContent='⏳ '+label; }
-  }
-}
-function setVizStep(n) {
-  for (let i = 1; i <= 3; i++) {
-    const el = document.getElementById('vstep' + i); if (!el) continue;
-    const label = 'Schritt '+i+': '+VIZ_STEPS[i-1];
-    if (i < n)        { el.className='viz-step done';   el.textContent='✅ '+label; }
-    else if (i === n) { el.className='viz-step active'; el.textContent='🔄 '+label; }
-    else              { el.className='viz-step';        el.textContent='⏳ '+label; }
-  }
-}
-function formatMarkdown(text) {
-  return text
-    .replace(/### (.+)/g,'<h3>$1</h3>').replace(/## (.+)/g,'<h3>$1</h3>')
-    .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\*(.+?)\*/g,'<em>$1</em>')
-    .replace(/^- (.+)/gm,'• $1').replace(/\n/g,'<br>');
-}
+function showErr(msg){const el=document.getElementById('errBar');el.textContent='❌ '+msg;el.className='err-bar on';setTimeout(()=>el.className='err-bar',6000);}
+function hideErr(){document.getElementById('errBar').className='err-bar';}
+function setMainStep(n){for(let i=1;i<=4;i++){const el=document.getElementById('step'+i);if(!el)continue;const l=MAIN_STEPS[i-1];if(i<n){el.className='step done';el.textContent='✅ '+l;}else if(i===n){el.className='step active';el.textContent='🔄 '+l;}else{el.className='step';el.textContent='⏳ '+l;}}}
+function setVizStep(n){for(let i=1;i<=3;i++){const el=document.getElementById('vstep'+i);if(!el)continue;const l='Schritt '+i+': '+VIZ_STEPS[i-1];if(i<n){el.className='viz-step done';el.textContent='✅ '+l;}else if(i===n){el.className='viz-step active';el.textContent='🔄 '+l;}else{el.className='viz-step';el.textContent='⏳ '+l;}}}
+function setWizStep(n){for(let i=1;i<=3;i++){const el=document.getElementById('wstep'+i);if(!el)continue;const l='Schritt '+i+': '+WIZ_STEPS[i-1];if(i<n){el.className='viz-step done';el.textContent='✅ '+l;}else if(i===n){el.className='viz-step active';el.textContent='🔄 '+l;}else{el.className='viz-step';el.textContent='⏳ '+l;}}}
+function formatMarkdown(t){return t.replace(/### (.+)/g,'<h3>$1</h3>').replace(/## (.+)/g,'<h3>$1</h3>').replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\*(.+?)\*/g,'<em>$1</em>').replace(/^- (.+)/gm,'• $1').replace(/\n/g,'<br>');}
 
 // ===== FOTOS =====
-function handleFiles(input) {
-  const files = Array.from(input.files); if (!files.length) return;
-  let loaded = 0;
-  files.forEach(file => {
-    const reader = new FileReader();
-    reader.onload = e => {
-      photos.push({ base64: e.target.result.split(',')[1], name: file.name, full: e.target.result });
-      if (++loaded === files.length) renderPhotos();
-    };
-    reader.readAsDataURL(file);
-  });
-}
-function renderPhotos() {
-  vizHistory=[]; cachedEditPrompt=''; cachedRoomType='Raum';
-  wizResults=[]; wizCachedPrompts=[]; wizCachedTypes=[];
-  document.getElementById('vizResult').style.display  = 'none';
-  document.getElementById('wizardCard').style.display = 'none';
-  const regenBtn = document.getElementById('vizRegenBtn');
-  if (regenBtn) regenBtn.style.display = 'none';
-  document.getElementById('startWizardBtn').style.display = photos.length ? 'flex' : 'none';
-  document.getElementById('photosGrid').innerHTML = photos.map((p,i) => `
-    <div class="photo-thumb">
-      <img src="${p.full}" alt="${p.name}" />
-      <button class="del" onclick="removePhoto(${i})">×</button>
-      ${i===0?'<span class="main-badge">Haupt</span>':''}
-    </div>`).join('');
-  document.getElementById('photosCount').textContent = photos.length > 0 ? `✓ ${photos.length} Foto${photos.length>1?'s':''} geladen` : '';
-  document.getElementById('fileInput').value = '';
-}
-function removePhoto(i) { photos.splice(i,1); renderPhotos(); }
+function handleFiles(input){const files=Array.from(input.files);if(!files.length)return;let loaded=0;files.forEach(file=>{const r=new FileReader();r.onload=e=>{photos.push({base64:e.target.result.split(',')[1],name:file.name,full:e.target.result});loaded++;if(loaded===files.length)renderPhotos();};r.readAsDataURL(file);});}
+function renderPhotos(){vizHistory=[];cachedEditPrompt='';cachedRoomType='Raum';cachedRoomAnalysis=null;wizResults=[];wizCachedPrompts=[];wizCachedTypes=[];wizCachedAnalysis=[];document.getElementById('vizResult').style.display='none';document.getElementById('wizardCard').style.display='none';const rb=document.getElementById('vizRegenBtn');if(rb)rb.style.display='none';document.getElementById('startWizardBtn').style.display=photos.length?'flex':'none';document.getElementById('photosGrid').innerHTML=photos.map((p,i)=>`<div class="photo-thumb"><img src="${p.full}" alt="${p.name}"/><button class="del" onclick="removePhoto(${i})">×</button>${i===0?'<span class="main-badge">Haupt</span>':''}</div>`).join('');document.getElementById('photosCount').textContent=photos.length>0?`✓ ${photos.length} Foto${photos.length>1?'s':''} geladen`:'';document.getElementById('fileInput').value='';}
+function removePhoto(i){photos.splice(i,1);renderPhotos();}
+
+// ===== INSPIRATIONS-FOTO =====
+function handleInspirationFile(input){const file=input.files[0];if(!file)return;const r=new FileReader();r.onload=e=>{inspirationPhoto={base64:e.target.result.split(',')[1],full:e.target.result};inspirationStyle=null;renderInspirationThumb();};r.readAsDataURL(file);input.value='';}
+function renderInspirationThumb(){const w=document.getElementById('inspirationThumb');if(!inspirationPhoto){w.style.display='none';w.innerHTML='';return;}w.style.display='block';w.innerHTML=`<div class="insp-thumb-wrap"><img src="${inspirationPhoto.full}" alt="Inspiration"/><div class="insp-info"><strong>🖼️ Inspirationsbild gesetzt</strong><span>Die KI orientiert sich beim Stil, Farben &amp; Materialien an diesem Bild</span></div><button class="insp-del" onclick="removeInspiration()">✕</button></div>`;}
+function removeInspiration(){inspirationPhoto=null;inspirationStyle=null;renderInspirationThumb();}
+async function getInspirationStyle(key){if(!inspirationPhoto)return null;if(inspirationStyle)return inspirationStyle;try{const r=await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},body:JSON.stringify({model:'gpt-4o',temperature:0,max_tokens:220,messages:[{role:'user',content:[{type:'image_url',image_url:{url:'data:image/jpeg;base64,'+inspirationPhoto.base64,detail:'high'}},{type:'text',text:`Describe the interior design style of this photo precisely in 2-3 sentences for use as a style reference for an AI image generator. Include: exact dominant colors, specific material types, fixture finishes, lighting mood, and overall aesthetic. Be very specific. English only.`}]}]})});const d=await r.json();if(r.ok&&d.choices?.[0]){inspirationStyle=d.choices[0].message.content.trim();return inspirationStyle;}}catch(e){console.warn('Inspiration-Stilanalyse fehlgeschlagen:',e);}return null;}
 
 // ===== AUDIO =====
-async function toggleRec() {
-  if (!isRec) {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' : 'audio/webm';
-      mRec = new MediaRecorder(stream, { mimeType }); aChunks = [];
-      mRec.ondataavailable = e => { if (e.data.size>0) aChunks.push(e.data); };
-      mRec.onstop = () => {
-        audBlob = new Blob(aChunks, { type: mimeType });
-        document.getElementById('audioPlayer').src = URL.createObjectURL(audBlob);
-        document.getElementById('audioPrev').style.display = 'block';
-        stream.getTracks().forEach(t => t.stop());
-      };
-      mRec.start(500); isRec=true; recSeconds=0;
-      document.getElementById('recBtn').textContent='⏹';
-      document.getElementById('recBtn').classList.add('rec');
-      document.getElementById('recStatus').textContent='● Aufnahme';
-      document.getElementById('recStatus').classList.add('active');
-      document.getElementById('recTimer').style.display='block';
-      timerInterval = setInterval(() => {
-        recSeconds++;
-        const m=Math.floor(recSeconds/60), s=recSeconds%60;
-        document.getElementById('recTimer').textContent=`${m}:${String(s).padStart(2,'0')}`;
-        document.getElementById('progressFill').style.width=Math.min((recSeconds/120)*100,100)+'%';
-      },1000);
-    } catch(e) { showErr('Mikrofon-Zugriff verweigert. Bitte Berechtigung im Browser erteilen.'); }
-  } else {
-    mRec.stop(); isRec=false; clearInterval(timerInterval);
-    document.getElementById('recBtn').textContent='🎙️';
-    document.getElementById('recBtn').classList.remove('rec');
-    document.getElementById('recStatus').textContent='✓ Gespeichert';
-    document.getElementById('recStatus').classList.remove('active');
-  }
-}
-
-// ===== MODES =====
-function toggleM(m) {
-  const el = document.getElementById('m-'+m);
-  if (modes.has(m)) { modes.delete(m); el.classList.remove('on'); }
-  else              { modes.add(m);    el.classList.add('on');    }
-}
+async function toggleRec(){if(!isRec){try{const stream=await navigator.mediaDevices.getUserMedia({audio:true});const mt=MediaRecorder.isTypeSupported('audio/webm;codecs=opus')?'audio/webm;codecs=opus':'audio/webm';mRec=new MediaRecorder(stream,{mimeType:mt});aChunks=[];mRec.ondataavailable=e=>{if(e.data.size>0)aChunks.push(e.data);};mRec.onstop=()=>{audBlob=new Blob(aChunks,{type:mt});document.getElementById('audioPlayer').src=URL.createObjectURL(audBlob);document.getElementById('audioPrev').style.display='block';stream.getTracks().forEach(t=>t.stop());};mRec.start(500);isRec=true;recSeconds=0;document.getElementById('recBtn').textContent='⏹';document.getElementById('recBtn').classList.add('rec');document.getElementById('recStatus').textContent='● Aufnahme';document.getElementById('recStatus').classList.add('active');document.getElementById('recTimer').style.display='block';timerInterval=setInterval(()=>{recSeconds++;const m=Math.floor(recSeconds/60),s=recSeconds%60;document.getElementById('recTimer').textContent=`${m}:${String(s).padStart(2,'0')}`;document.getElementById('progressFill').style.width=Math.min((recSeconds/120)*100,100)+'%';},1000);}catch(e){showErr('Mikrofon-Zugriff verweigert.');}}else{mRec.stop();isRec=false;clearInterval(timerInterval);document.getElementById('recBtn').textContent='🎙️';document.getElementById('recBtn').classList.remove('rec');document.getElementById('recStatus').textContent='✓ Gespeichert';document.getElementById('recStatus').classList.remove('active');}}
+async function toggleRenoRec(){if(!renoIsRec){try{const stream=await navigator.mediaDevices.getUserMedia({audio:true});const mt=MediaRecorder.isTypeSupported('audio/webm;codecs=opus')?'audio/webm;codecs=opus':'audio/webm';renoMRec=new MediaRecorder(stream,{mimeType:mt});renoAChunks=[];renoMRec.ondataavailable=e=>{if(e.data.size>0)renoAChunks.push(e.data);};renoMRec.onstop=()=>{renoAudBlob=new Blob(renoAChunks,{type:mt});stream.getTracks().forEach(t=>t.stop());document.getElementById('renoRecStatus').textContent='✓ OK';};renoMRec.start(500);renoIsRec=true;document.getElementById('renoRecBtn').textContent='⏹';document.getElementById('renoRecBtn').classList.add('rec');document.getElementById('renoRecStatus').textContent='● REC';document.getElementById('renoRecStatus').classList.add('active');}catch(e){showErr('Mikrofon-Zugriff verweigert.');}}else{renoMRec.stop();renoIsRec=false;document.getElementById('renoRecBtn').textContent='🎙️';document.getElementById('renoRecBtn').classList.remove('rec');document.getElementById('renoRecStatus').classList.remove('active');}}
+function toggleM(m){const el=document.getElementById('m-'+m);if(modes.has(m)){modes.delete(m);el.classList.remove('on');}else{modes.add(m);el.classList.add('on');}}
 
 // ===== ANALYSE =====
-async function runAnalyse() {
-  const key = document.getElementById('openaiKey').value.trim();
-  if (!key) { showErr('Bitte OpenAI API Key eingeben.'); return; }
-  if (!photos.length && !audBlob && !document.getElementById('manualDesc').value.trim()) {
-    showErr('Bitte mindestens ein Foto, eine Sprachaufnahme oder eine Textbeschreibung bereitstellen.'); return;
-  }
-  hideErr();
-  document.getElementById('analyzeBtn').disabled = true;
-  document.getElementById('loading').classList.add('on');
-  document.getElementById('resultCard').classList.remove('on');
-  transcript = '';
-
+async function runAnalyse(){
+  const key=document.getElementById('openaiKey').value.trim();
+  if(!key){showErr('Bitte OpenAI API Key eingeben.');return;}
+  if(!photos.length&&!audBlob&&!document.getElementById('manualDesc').value.trim()){showErr('Bitte mindestens ein Foto, eine Sprachaufnahme oder eine Textbeschreibung bereitstellen.');return;}
+  hideErr();document.getElementById('analyzeBtn').disabled=true;document.getElementById('loading').classList.add('on');document.getElementById('resultCard').classList.remove('on');transcript='';
   setMainStep(1);
-  if (audBlob) {
-    try {
-      const fd = new FormData();
-      fd.append('file', audBlob, 'aufnahme.webm');
-      fd.append('model','whisper-1'); fd.append('language','de');
-      const r = await fetch('https://api.openai.com/v1/audio/transcriptions',
-        { method:'POST', headers:{'Authorization':'Bearer '+key}, body:fd });
-      if (r.ok) {
-        const d = await r.json();
-        if (d.text) {
-          transcript = d.text;
-          document.getElementById('transcriptText').textContent = transcript;
-          document.getElementById('transcriptBox').classList.add('on');
-        }
-      }
-    } catch(e) { console.warn('Transkription fehlgeschlagen:',e); }
-  }
-
+  if(audBlob){try{const fd=new FormData();fd.append('file',audBlob,'aufnahme.webm');fd.append('model','whisper-1');fd.append('language','de');const r=await fetch('https://api.openai.com/v1/audio/transcriptions',{method:'POST',headers:{'Authorization':'Bearer '+key},body:fd});if(r.ok){const d=await r.json();if(d.text){transcript=d.text;document.getElementById('transcriptText').textContent=transcript;document.getElementById('transcriptBox').classList.add('on');}}}catch(e){console.warn(e);}}
   setMainStep(2);
-  const manualDesc = document.getElementById('manualDesc').value.trim();
+  const manualDesc=document.getElementById('manualDesc').value.trim();
   const kunde=document.getElementById('auftraggeber').value||'Unbekannt';
   const obj=document.getElementById('objekt').value||'Unbekannt';
   const schaden=document.getElementById('schadensart').value||'Unbekannt';
   const flaeche=document.getElementById('flaeche').value||'unbekannt';
   const vers=document.getElementById('versicherung').value||'';
   const budget=document.getElementById('budget').value||'';
-
-  const systemPrompt=`Du bist ein erfahrener Bausachverständiger und Gutachter für Gebäudetrocknung und Sanierung.
-Du erstellst professionelle, strukturierte Berichte für das Unternehmen Gebäudetrocknung Wiegand.
-Formatiere deine Antwort mit ### Überschriften und **fett** für wichtige Punkte.
-Antworte ausschließlich auf Deutsch. Sei präzise, praxisnah und konkret.`;
-
-  let userText=`Analysiere diesen Gebäudeschaden professionell.\n\n**Auftragsdaten:**\n- Objekt: ${obj}\n- Auftraggeber: ${kunde}\n- Schadensart: ${schaden}\n- Fläche: ${flaeche} m²\n- Versicherungsfall: ${vers}\n${budget?'- Budgetrahmen: '+budget+' €':''}\n${transcript?'\n**Mündliche Schadensbeschreibung:**\n'+transcript+'\n':''}${manualDesc?'\n**Schriftliche Schadensbeschreibung:**\n'+manualDesc+'\n':''}\nErstelle folgende Abschnitte:\n`;
-  if (modes.has('schaden')) userText+=`\n### Schadensbeurteilung\n- Sichtbare Schäden detailliert beschreiben\n- Vermutliche Ursache und Schadensausmaß\n- Sofortmaßnahmen die jetzt getroffen werden müssen\n`;
-  if (modes.has('konzept')) userText+=`\n### Sanierungskonzept\n- Schritt-für-Schritt Maßnahmenplan\n- Benötigte Geräte und Materialien\n- Realistischer Zeitplan (in Tagen/Wochen)\n`;
-  if (modes.has('kosten'))  userText+=`\n### Kostenschätzung\n- Aufgeschlüsselte Kostenpositionen in EUR\n- Gerätekosten, Material, Arbeitszeit separat\n- Gesamtsumme Netto + 19% MwSt = Brutto\n`;
-  if (modes.has('foerder')) userText+=`\n### Förderung & Versicherung\n- Versicherungsrelevante Hinweise und Dokumentationstipps\n- Mögliche Förderungen (KfW, BAFA, Landesförderprogramme)\n- Empfehlungen für die Schadensmeldung\n`;
-
-  const parts=[{ type:'text', text:userText }];
-  for (let i=0; i<Math.min(photos.length,4); i++)
-    parts.push({ type:'image_url', image_url:{ url:'data:image/jpeg;base64,'+photos[i].base64, detail:'high' }});
-
+  const sys=`Du bist ein erfahrener Bausachverständiger und Sanierungsspezialist mit über 20 Jahren Erfahrung in Wasserschadenanalyse, Schimmelsanierung und Gebäudetrocknung. Du arbeitest für Gebäudetrocknung Wiegand in Eschwege.\n\nDeine Gutachten sind:\n– Direkt und handlungsorientiert\n– Priorisiert nach Dringlichkeit mit konkreten Zeitangaben\n– Mit realistischen Kostenschätzungen basierend auf aktuellen Marktpreisen\n– Fachlich präzise\n\nFormatierung: ### Abschnitte, **fett** für kritische Punkte, Kostenangaben als Spanne (z.B. 2.500–3.200 €). Antworte ausschließlich auf Deutsch.`;
+  let userText=`Analysiere diesen Gebäudeschaden professionell.\n\n**Auftragsdaten:**\n- Objekt: ${obj}\n- Auftraggeber: ${kunde}\n- Schadensart: ${schaden}\n- Fläche: ${flaeche} m²\n- Versicherungsfall: ${vers}\n${budget?'- Budgetrahmen: '+budget+' €':''}\n${transcript?'\n**Mündliche Schadensbeschreibung:**\n'+transcript+'\n':''}${manualDesc?'\n**Schriftliche Beschreibung:**\n'+manualDesc+'\n':''}\nErstelle folgende Abschnitte:\n`;
+  if(modes.has('schaden'))userText+=`\n### Schadensbeurteilung\n- Sichtbare Schäden detailliert\n- Vermutliche Ursache\n- Sofortmaßnahmen\n`;
+  if(modes.has('konzept'))userText+=`\n### Sanierungskonzept\n- Schritt-für-Schritt Maßnahmenplan\n- Geräte und Materialien\n- Zeitplan\n`;
+  if(modes.has('kosten'))userText+=`\n### Kostenschätzung\n- Aufgeschlüsselte Positionen\n- Netto + MwSt = Brutto\n`;
+  if(modes.has('foerder'))userText+=`\n### Förderung & Versicherung\n- Versicherungshinweise\n- KfW/BAFA Förderungen\n`;
+  const parts=[{type:'text',text:userText}];
+  for(let i=0;i<Math.min(photos.length,4);i++)parts.push({type:'image_url',image_url:{url:'data:image/jpeg;base64,'+photos[i].base64,detail:'high'}});
   setMainStep(3);
-  try {
-    const response = await fetch('https://api.openai.com/v1/chat/completions',{
-      method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
-      body:JSON.stringify({ model:'gpt-4o', max_tokens:2500,
-        messages:[{ role:'system', content:systemPrompt },{ role:'user', content:parts }]})
-    });
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.error?.message||'API Fehler '+response.status);
-    setMainStep(4);
-    await new Promise(r => setTimeout(r,500));
-    lastAnalysis = data.choices[0].message.content;
-    document.getElementById('resultContent').innerHTML = formatMarkdown(lastAnalysis);
-    document.getElementById('resultCard').classList.add('on');
-    document.getElementById('resultCard').scrollIntoView({ behavior:'smooth' });
-  } catch(e) { showErr('Analyse-Fehler: '+e.message); }
-
-  document.getElementById('loading').classList.remove('on');
-  document.getElementById('analyzeBtn').disabled = false;
+  try{const res=await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},body:JSON.stringify({model:'gpt-4o',max_tokens:2500,messages:[{role:'system',content:sys},{role:'user',content:parts}]})});const data=await res.json();if(!res.ok)throw new Error(data.error?.message||'API Fehler');setMainStep(4);await new Promise(r=>setTimeout(r,500));lastAnalysis=data.choices[0].message.content;document.getElementById('resultContent').innerHTML=formatMarkdown(lastAnalysis);document.getElementById('resultCard').classList.add('on');document.getElementById('resultCard').scrollIntoView({behavior:'smooth'});}catch(e){showErr('Analyse-Fehler: '+e.message);}
+  document.getElementById('loading').classList.remove('on');document.getElementById('analyzeBtn').disabled=false;
 }
 
-// ===== RENO WÜNSCHE AUDIO =====
-async function toggleRenoRec() {
-  if (!renoIsRec) {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio:true });
-      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')?'audio/webm;codecs=opus':'audio/webm';
-      renoMRec = new MediaRecorder(stream,{ mimeType }); renoAChunks=[];
-      renoMRec.ondataavailable = e => { if (e.data.size>0) renoAChunks.push(e.data); };
-      renoMRec.onstop = () => {
-        renoAudBlob = new Blob(renoAChunks,{ type:mimeType });
-        stream.getTracks().forEach(t=>t.stop());
-        document.getElementById('renoRecStatus').textContent='✓ OK';
-      };
-      renoMRec.start(500); renoIsRec=true;
-      document.getElementById('renoRecBtn').textContent='⏹';
-      document.getElementById('renoRecBtn').classList.add('rec');
-      document.getElementById('renoRecStatus').textContent='● REC';
-      document.getElementById('renoRecStatus').classList.add('active');
-    } catch(e) { showErr('Mikrofon-Zugriff verweigert.'); }
-  } else {
-    renoMRec.stop(); renoIsRec=false;
-    document.getElementById('renoRecBtn').textContent='🎙️';
-    document.getElementById('renoRecBtn').classList.remove('rec');
-    document.getElementById('renoRecStatus').classList.remove('active');
-  }
+// ===== SHARED HELPERS =====
+const ROOM_ANALYSIS_PROMPT=`You are an expert interior architect specializing in renovation visualization.
+Analyze this room photo with maximum precision. Identify ALL visible elements systematically.
+Return ONLY valid JSON — no markdown, no explanation, no code block:
+{
+  "roomType": "one German noun, e.g. Badezimmer / Küche / Wohnzimmer / Schlafzimmer",
+  "cameraAngle": "precise: estimated camera height in cm from floor, horizontal angle, viewing direction, tilt",
+  "fixedElements": "exhaustive comma-separated list with EXACT wall placement",
+  "fixtureSizes": "each element as approximate % of the visible wall area",
+  "surfaceCondition": "brief current damage/condition",
+  "renovationMaterials": "specific recommended modern materials for this room type"
+}`;
+
+function buildEditPrompt(a,materials,inspStyle=null){
+  const parts=[
+    `RENOVATION VISUALIZATION: Transform this exact photo into a photorealistic modern renovation of the same room.`,
+    `CAMERA LOCK (absolute): Preserve camera height, angle, focal length and framing identically — ${a.cameraAngle||'same viewpoint as source photo'}.`,
+    `POSITION LOCK (absolute): Every single fixture and architectural element stays on its exact wall at its exact location — ${a.fixedElements||'all elements at original positions'}.`,
+    `SIZE LOCK (absolute): No element may change size, scale or proportion — ${a.fixtureSizes||'all elements at original scale'}.`,
+    `APPLY ONLY: Replace surface finishes — wall tiles, floor tiles, ceiling, paint colors, grouting. ${materials}`,
+  ];
+  if(inspStyle)parts.push(`STYLE INSPIRATION (reference image provided): Adopt this exact aesthetic — ${inspStyle}. Mirror its color palette, material language, lighting mood and overall feel precisely.`);
+  parts.push(`FORBIDDEN: Moving, resizing, adding or removing any element. No geometry changes. No viewpoint changes.`);
+  parts.push(`OUTPUT QUALITY: Photorealistic interior photo. Professional real estate photography. Soft warm lighting. No damage, no stains, no mold.`);
+  return parts.join(' ');
 }
+
+function buildDetailedDescription(a,roomType,feedback){
+  if(!a){return feedback?`<strong>✅ Ihre Wünsche wurden umgesetzt:</strong> „${feedback}"`:`<strong>✅ Moderner Renovierungsvorschlag für ${roomType} generiert.</strong>`;}
+  let html=`<strong>✨ ${a.roomType||roomType} – Renovierungsvorschlag</strong>`;
+  if(a.surfaceCondition)html+=`<br><br><strong style="color:var(--gray-700)">📋 Ausgangszustand:</strong><br>${a.surfaceCondition}`;
+  if(a.renovationMaterials)html+=`<br><br><strong style="color:var(--gray-700)">🎨 Verwendete Materialien & Design:</strong><br>${a.renovationMaterials}`;
+  if(a.fixedElements)html+=`<br><br><strong style="color:var(--gray-700)">📐 Positionen beibehalten:</strong><br>${a.fixedElements}`;
+  if(a.fixtureSizes)html+=`<br><br><strong style="color:var(--gray-700)">📏 Maßverhältnisse:</strong><br>${a.fixtureSizes}`;
+  if(feedback)html+=`<br><br><strong style="color:var(--blue)">💬 Umgesetzte Wünsche:</strong> „${feedback}"`;
+  if(inspirationPhoto&&inspirationStyle)html+=`<br><br><strong style="color:var(--blue-dark)">🖼️ Orientiert an Inspirationsbild:</strong><br><em style="font-size:11px">${inspirationStyle}</em>`;
+  if(a.cameraAngle)html+=`<br><br><strong style="color:var(--green)">✅ Kamerawinkel 1:1 beibehalten:</strong> ${a.cameraAngle}`;
+  return html;
+}
+
+function resizeImagePNG(dataUrl,maxSize){return new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>{const scale=Math.min(maxSize/img.width,maxSize/img.height,1);const w=Math.round(img.width*scale),h=Math.round(img.height*scale);const c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);c.toBlob(blob=>blob?resolve(blob):reject(new Error('PNG-Export fehlgeschlagen')),'image/png');};img.onerror=()=>reject(new Error('Bild konnte nicht geladen werden'));img.src=dataUrl;});}
 
 // ===== VISUALISIERUNG =====
-async function generateViz(skipAnalysis=false) {
+async function generateViz(skipAnalysis=false){
   const key=document.getElementById('openaiKey').value.trim();
-  if (!key) { showErr('Bitte OpenAI Key eingeben.'); return; }
-  if (!photos.length) { showErr('Bitte zuerst ein Foto hochladen.'); return; }
-  document.getElementById('vizBtn').disabled=true;
-  document.getElementById('vizRegenBtn').disabled=true;
-  document.getElementById('ldViz').classList.add('on');
-  if (!vizHistory.length) document.getElementById('vizResult').style.display='none';
-
+  if(!key){showErr('Bitte OpenAI Key eingeben.');return;}
+  if(!photos.length){showErr('Bitte zuerst ein Foto hochladen.');return;}
+  document.getElementById('vizBtn').disabled=true;document.getElementById('vizRegenBtn').disabled=true;document.getElementById('ldViz').classList.add('on');
+  if(!vizHistory.length)document.getElementById('vizResult').style.display='none';
   let userWishes=document.getElementById('renoWishes').value.trim();
-  if (renoAudBlob && !skipAnalysis) {
-    try {
-      const wfd=new FormData();
-      wfd.append('file',renoAudBlob,'wuensche.webm'); wfd.append('model','whisper-1'); wfd.append('language','de');
-      const wr=await fetch('https://api.openai.com/v1/audio/transcriptions',
-        { method:'POST', headers:{'Authorization':'Bearer '+key}, body:wfd });
-      if (wr.ok) {
-        const wd=await wr.json();
-        if (wd.text) {
-          const wt=wd.text.trim();
-          userWishes=userWishes?userWishes+' · '+wt:wt;
-          const el=document.getElementById('renoTranscript');
-          el.textContent='🎙️ '+wt; el.classList.add('on');
-        }
-      }
-    } catch(e) { console.warn('Wünsche-Transkription fehlgeschlagen:',e); }
-  }
-
-  let roomType=cachedRoomType, editPrompt=cachedEditPrompt;
-  if (!skipAnalysis || !cachedEditPrompt) {
-    setVizStep(1);
-    try {
-      const r1=await fetch('https://api.openai.com/v1/chat/completions',{
-        method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
-        body:JSON.stringify({ model:'gpt-4o', max_tokens:600,
-          messages:[{ role:'user', content:[
-            { type:'image_url', image_url:{ url:'data:image/jpeg;base64,'+photos[0].base64, detail:'high' }},
-            { type:'text', text:`Analyze this room photo with extreme precision. Return ONLY valid JSON, no markdown:
-{
-  "roomType": "room type in German, one word",
-  "cameraAngle": "exact camera position in English: height from floor, angle, direction",
-  "fixedElements": "every fixture with EXACT position on which wall",
-  "fixtureSizes": "size of each fixture relative to room as percentage of wall",
-  "renovationMaterials": "default modern materials if user specifies none: wall tiles, floor tiles, fixtures style"
-}` }
-          ]}]})
-      });
-      const d1=await r1.json();
-      if (d1.choices) {
-        const match=d1.choices[0].message.content.trim().match(/\{[\s\S]*\}/);
-        if (match) {
-          const p=JSON.parse(match[0]);
-          if (p.roomType) roomType=p.roomType;
-          const materials=userWishes
-            ?`Apply user wishes for materials/colors: "${userWishes}". Default fallback: ${p.renovationMaterials||'modern European high-end materials'}.`
-            :`Use: ${p.renovationMaterials||'modern European high-end materials, clean and bright'}.`;
-          editPrompt=[
-            `PHOTO RENOVATION TASK: Edit this photo to show the same room after a modern renovation.`,
-            `CAMERA LOCK: Keep the exact camera position, angle and height unchanged — ${p.cameraAngle||'same as original'}.`,
-            `POSITION LOCK — keep every fixture on its exact wall at its exact position, do not move anything: ${p.fixedElements||'all fixtures remain in original position'}.`,
-            `SIZE LOCK — keep every fixture at its exact original size and scale, do not make anything larger or smaller: ${p.fixtureSizes||'all fixtures keep their original size and proportions'}.`,
-            `ONLY CHANGE: surface materials (tiles, paint, flooring), colors, and finish quality. ${materials}`,
-            `DO NOT: resize any fixture, move any element, change room proportions, alter camera angle, remove windows/doors/radiators, or invent new architectural elements.`,
-            `Result: photorealistic, bright, clean renovation. Soft warm LED lighting. No damage, no stains, no mold.`
-          ].join(' ');
-          cachedRoomType=roomType; cachedEditPrompt=editPrompt;
-        }
-      }
-    } catch(e) { console.warn('Raumanalyse fehlgeschlagen:',e); }
-    if (!editPrompt) editPrompt=cachedEditPrompt||`IMAGE EDITING TASK — POSITION LOCK and SIZE LOCK: do not move or resize any fixture. DO NOT change camera angle, room dimensions or layout. ONLY replace damaged/stained surfaces with modern renovation materials. ${userWishes?'User wishes: '+userWishes+'.':''} Photorealistic.`;
-  } else {
-    if (userWishes) editPrompt=cachedEditPrompt.replace(/ONLY CHANGE:.*?(?=DO NOT:)/,`ONLY CHANGE: surface materials and colors. Apply user wishes: "${userWishes}". `)||cachedEditPrompt;
-    setVizStep(1); setVizStep(2);
-  }
-
+  if(renoAudBlob&&!skipAnalysis){try{const wfd=new FormData();wfd.append('file',renoAudBlob,'wuensche.webm');wfd.append('model','whisper-1');wfd.append('language','de');const wr=await fetch('https://api.openai.com/v1/audio/transcriptions',{method:'POST',headers:{'Authorization':'Bearer '+key},body:wfd});if(wr.ok){const wd=await wr.json();if(wd.text){const wt=wd.text.trim();userWishes=userWishes?userWishes+' · '+wt:wt;const el=document.getElementById('renoTranscript');el.textContent='🎙️ '+wt;el.classList.add('on');}}}catch(e){console.warn(e);}}
+  let roomType=cachedRoomType,editPrompt=cachedEditPrompt;
+  if(!skipAnalysis||!cachedRoomAnalysis){setVizStep(1);try{const r1=await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},body:JSON.stringify({model:'gpt-4o',temperature:0,max_tokens:700,messages:[{role:'user',content:[{type:'image_url',image_url:{url:'data:image/jpeg;base64,'+photos[0].base64,detail:'high'}},{type:'text',text:ROOM_ANALYSIS_PROMPT}]}]})});const d1=await r1.json();if(!r1.ok)throw new Error(d1.error?.message||'GPT-4o Fehler');const raw=d1.choices[0].message.content.trim();const match=raw.match(/\{[\s\S]*\}/);if(match){const p=JSON.parse(match[0]);cachedRoomAnalysis=p;if(p.roomType){roomType=p.roomType;cachedRoomType=roomType;}}}catch(e){console.warn(e);}}else{setVizStep(2);}
+  const inspStyle=await getInspirationStyle(key);
+  if(cachedRoomAnalysis){const a=cachedRoomAnalysis;const mat=userWishes?`Apply ONLY these user wishes: "${userWishes}". For everything else use: ${a.renovationMaterials||'modern high-end European materials'}.`:`Use: ${a.renovationMaterials||'modern high-end European materials, bright and clean'}.`;editPrompt=buildEditPrompt(a,mat,inspStyle||null);cachedEditPrompt=editPrompt;}
+  else{editPrompt=cachedEditPrompt||`RENOVATION VISUALIZATION. POSITION LOCK and SIZE LOCK. CAMERA LOCK. APPLY: Replace damaged surfaces. ${userWishes?'User wishes: '+userWishes+'.':''}${inspStyle?' STYLE INSPIRATION: '+inspStyle:''} Photorealistic.`;}
   setVizStep(2);
-  let imageBlob;
-  try {
-    imageBlob=await resizeImagePNG(photos[0].full,1024);
-    if (imageBlob.size>20*1024*1024) throw new Error('Foto ist zu groß (max. 20 MB).');
-  } catch(e) {
-    showErr('Bild-Vorbereitung fehlgeschlagen: '+e.message);
-    document.getElementById('ldViz').classList.remove('on');
-    document.getElementById('vizBtn').disabled=false;
-    document.getElementById('vizRegenBtn').disabled=false;
-    return;
-  }
-
+  let imageBlob;try{imageBlob=await resizeImagePNG(photos[0].full,1024);if(imageBlob.size>20*1024*1024)throw new Error('Foto zu groß.');}catch(e){showErr('Bildvorbereitung: '+e.message);document.getElementById('ldViz').classList.remove('on');document.getElementById('vizBtn').disabled=false;document.getElementById('vizRegenBtn').disabled=false;return;}
   setVizStep(3);
-  try {
-    const fd=new FormData();
-    fd.append('model','gpt-image-1'); fd.append('image[]',imageBlob,'room.png');
-    fd.append('prompt',editPrompt); fd.append('n','1'); fd.append('size','auto'); fd.append('quality','high');
-    const response=await fetch('https://api.openai.com/v1/images/edits',
-      { method:'POST', headers:{'Authorization':'Bearer '+key}, body:fd });
-    const data=await response.json();
-    if (!response.ok) throw new Error(data.error?.message||'Bildgenerierung fehlgeschlagen');
-    const item=data.data[0];
-    const imgSrc=item.b64_json?'data:image/png;base64,'+item.b64_json:item.url;
-    vizHistory.push(imgSrc);
-    renderVizHistory();
-  } catch(e) { showErr('Visualisierung Fehler: '+e.message); }
-
-  document.getElementById('ldViz').classList.remove('on');
-  document.getElementById('vizBtn').disabled=false;
-  document.getElementById('vizRegenBtn').disabled=false;
+  try{const fd=new FormData();fd.append('model','gpt-image-1');fd.append('image[]',imageBlob,'room.png');if(inspirationPhoto){const ib=await resizeImagePNG(inspirationPhoto.full,1024);fd.append('image[]',ib,'inspiration.png');}fd.append('prompt',editPrompt);fd.append('n','1');fd.append('size','auto');fd.append('quality','high');const res=await fetch('https://api.openai.com/v1/images/edits',{method:'POST',headers:{'Authorization':'Bearer '+key},body:fd});const data=await res.json();if(!res.ok){const em=data.error?.message||'Unbekannter Fehler';throw new Error(em+(em.includes('billing')?' – OpenAI-Guthaben prüfen.':em.includes('key')?' – API-Key ungültig.':''));}const item=data.data[0];const src=item.b64_json?'data:image/png;base64,'+item.b64_json:item.url;vizHistory.push(src);renderVizHistory();}catch(e){showErr('Visualisierung: '+e.message);}
+  document.getElementById('ldViz').classList.remove('on');document.getElementById('vizBtn').disabled=false;document.getElementById('vizRegenBtn').disabled=false;
 }
+function renderVizHistory(){const v=vizHistory.map((s,i)=>`<div class="viz-item"><img src="${s}" alt="Vorschlag ${i+1}"/><p>✨ Vorschlag ${i+1} – ${cachedRoomType}</p></div>`).join('');document.getElementById('vizGrid').innerHTML=`<div class="viz-item"><img src="${photos[0].full}" alt="Vorher"/><p>📷 IST-Zustand (Schaden)</p></div>${v}`;document.getElementById('vizResult').style.display='block';document.getElementById('vizRegenBtn').style.display='inline-flex';document.getElementById('vizResult').scrollIntoView({behavior:'smooth'});}
 
-function renderVizHistory() {
-  const variants=vizHistory.map((src,i)=>`
-    <div class="viz-item">
-      <img src="${src}" alt="Vorschlag ${i+1}" />
-      <p>✨ Vorschlag ${i+1} – ${cachedRoomType}</p>
-    </div>`).join('');
-  document.getElementById('vizGrid').innerHTML=`
-    <div class="viz-item">
-      <img src="${photos[0].full}" alt="Vorher" />
-      <p>📷 IST-Zustand (Schaden)</p>
-    </div>${variants}`;
-  document.getElementById('vizResult').style.display='block';
-  document.getElementById('vizRegenBtn').style.display='inline-flex';
-  document.getElementById('vizResult').scrollIntoView({ behavior:'smooth' });
-}
+// ===== WIZARD =====
+function updateWizardProgress(){const total=photos.length;document.getElementById('wizardProgressText').textContent=`Foto ${wizIndex+1} von ${total}`;document.getElementById('wizardDots').innerHTML=photos.map((_,i)=>`<div class="wizard-dot ${i<wizIndex?'done':i===wizIndex?'active':''}"></div>`).join('');const isLast=wizIndex===photos.length-1;document.getElementById('wizardNextBtn').style.display=isLast?'none':'inline-flex';document.getElementById('wizardDoneBtn').style.display=isLast?'inline-flex':'none';}
+async function startVizWizard(){const key=document.getElementById('openaiKey').value.trim();if(!key){showErr('Bitte OpenAI API Key eingeben.');return;}if(!photos.length){showErr('Bitte zuerst Fotos hochladen.');return;}wizIndex=0;wizCachedPrompts=new Array(photos.length).fill('');wizCachedTypes=new Array(photos.length).fill('Raum');wizCachedAnalysis=new Array(photos.length).fill(null);wizResults=[];document.getElementById('wizardCard').style.display='block';document.getElementById('wizardSummary').style.display='none';document.getElementById('wizardResult').style.display='none';document.getElementById('wizardCard').scrollIntoView({behavior:'smooth'});await generateWizPhoto(0);}
 
-function resizeImagePNG(dataUrl, maxSize) {
-  return new Promise((resolve,reject) => {
-    const img=new Image();
-    img.onload=() => {
-      const scale=Math.min(maxSize/img.width,maxSize/img.height,1);
-      const w=Math.round(img.width*scale), h=Math.round(img.height*scale);
-      const canvas=document.createElement('canvas');
-      canvas.width=w; canvas.height=h;
-      canvas.getContext('2d').drawImage(img,0,0,w,h);
-      canvas.toBlob(blob=>blob?resolve(blob):reject(new Error('PNG-Export fehlgeschlagen')),'image/png');
-    };
-    img.onerror=()=>reject(new Error('Bild konnte nicht geladen werden'));
-    img.src=dataUrl;
-  });
-}
-
-// ===== VERBESSERUNGSVORSCHLAG WIZARD =====
-const WIZ_STEPS=['Raum & Elemente analysieren','Foto für KI vorbereiten','Verbesserungsbild generieren'];
-
-function setWizStep(n) {
-  for (let i=1; i<=3; i++) {
-    const el=document.getElementById('wstep'+i); if (!el) continue;
-    const label='Schritt '+i+': '+WIZ_STEPS[i-1];
-    if (i<n)        { el.className='viz-step done';   el.textContent='✅ '+label; }
-    else if (i===n) { el.className='viz-step active'; el.textContent='🔄 '+label; }
-    else            { el.className='viz-step';        el.textContent='⏳ '+label; }
-  }
-}
-
-function updateWizardProgress() {
-  document.getElementById('wizardProgressText').textContent=`Foto ${wizIndex+1} von ${photos.length}`;
-  document.getElementById('wizardDots').innerHTML=photos.map((_,i)=>
-    `<div class="wizard-dot ${i<wizIndex?'done':i===wizIndex?'active':''}"></div>`).join('');
-  const isLast=wizIndex===photos.length-1;
-  document.getElementById('wizardNextBtn').style.display=isLast?'none':'inline-flex';
-  document.getElementById('wizardDoneBtn').style.display=isLast?'inline-flex':'none';
-}
-
-async function startVizWizard() {
+async function generateWizPhoto(index,feedback=''){
   const key=document.getElementById('openaiKey').value.trim();
-  if (!key)          { showErr('Bitte OpenAI API Key eingeben.');  return; }
-  if (!photos.length){ showErr('Bitte zuerst Fotos hochladen.');   return; }
-  wizIndex=0;
-  wizCachedPrompts=new Array(photos.length).fill('');
-  wizCachedTypes=new Array(photos.length).fill('Raum');
-  wizResults=[];
-  document.getElementById('wizardCard').style.display='block';
-  document.getElementById('wizardSummary').style.display='none';
-  document.getElementById('wizardResult').style.display='none';
-  document.getElementById('wizardCard').scrollIntoView({ behavior:'smooth' });
-  await generateWizPhoto(0);
-}
-
-async function generateWizPhoto(index, feedback='') {
-  const key=document.getElementById('openaiKey').value.trim();
-  if (!key) { showErr('Bitte OpenAI API Key eingeben.'); return; }
-  wizIndex=index; updateWizardProgress();
-  document.getElementById('wizardLoading').classList.add('on');
-  document.getElementById('wizardResult').style.display='none';
-  document.getElementById('wizardFeedback').value='';
-
-  let editPrompt=feedback?'':wizCachedPrompts[index];
-  let roomType=wizCachedTypes[index]||'Raum';
-
-  if (!editPrompt||feedback) {
-    setWizStep(1);
-    try {
-      const r1=await fetch('https://api.openai.com/v1/chat/completions',{
-        method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
-        body:JSON.stringify({ model:'gpt-4o', max_tokens:600,
-          messages:[{ role:'user', content:[
-            { type:'image_url', image_url:{ url:'data:image/jpeg;base64,'+photos[index].base64, detail:'high' }},
-            { type:'text', text:`Analyze this room photo with extreme precision. Return ONLY valid JSON, no markdown:
-{
-  "roomType": "room type in German, one word",
-  "cameraAngle": "exact camera position: height, angle, direction",
-  "fixedElements": "every fixture with EXACT wall position",
-  "fixtureSizes": "size of each fixture as % of wall",
-  "renovationMaterials": "default modern materials: wall tiles, floor tiles, fixtures style"
-}` }
-          ]}]})
-      });
-      const d1=await r1.json();
-      if (d1.choices) {
-        const match=d1.choices[0].message.content.trim().match(/\{[\s\S]*\}/);
-        if (match) {
-          const p=JSON.parse(match[0]);
-          if (p.roomType) { roomType=p.roomType; wizCachedTypes[index]=roomType; }
-          const materials=feedback
-            ?`Apply ONLY these user changes: "${feedback}". Keep everything else as default modern renovation: ${p.renovationMaterials||'modern European high-end materials'}.`
-            :`Use: ${p.renovationMaterials||'modern European high-end materials, clean and bright'}.`;
-          editPrompt=[
-            `PHOTO RENOVATION TASK: Edit this photo to show the same room after a modern renovation.`,
-            `CAMERA LOCK: Keep the exact camera position, angle and height — ${p.cameraAngle||'same as original'}.`,
-            `POSITION LOCK — keep every fixture on its exact wall at its exact position: ${p.fixedElements||'all fixtures remain'}.`,
-            `SIZE LOCK — keep every fixture at its exact original size: ${p.fixtureSizes||'all sizes unchanged'}.`,
-            `ONLY CHANGE: surface materials (tiles, paint, flooring), colors, finish quality. ${materials}`,
-            `DO NOT: resize any fixture, move elements, change room proportions, alter camera angle.`,
-            `Result: photorealistic, bright, clean renovation. Soft warm LED lighting. No damage, no stains.`
-          ].join(' ');
-          if (!feedback) wizCachedPrompts[index]=editPrompt;
-        }
-      }
-    } catch(e) { console.warn('Wizard-Analyse fehlgeschlagen:',e); }
-    if (!editPrompt) editPrompt=feedback
-      ?`POSITION LOCK and SIZE LOCK. Apply only: "${feedback}". Keep rest unchanged. Photorealistic renovation.`
-      :`POSITION LOCK and SIZE LOCK. Modern renovation, clean surfaces, same camera angle. Photorealistic.`;
-  }
-
+  if(!key){showErr('Bitte OpenAI API Key eingeben.');return;}
+  wizIndex=index;updateWizardProgress();
+  document.getElementById('wizardLoading').classList.add('on');document.getElementById('wizardResult').style.display='none';document.getElementById('wizardFeedback').value='';
+  let editPrompt='',roomType=wizCachedTypes[index]||'Raum';
+  if(!wizCachedAnalysis[index]){setWizStep(1);try{const r1=await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},body:JSON.stringify({model:'gpt-4o',temperature:0,max_tokens:700,messages:[{role:'user',content:[{type:'image_url',image_url:{url:'data:image/jpeg;base64,'+photos[index].base64,detail:'high'}},{type:'text',text:ROOM_ANALYSIS_PROMPT}]}]})});const d1=await r1.json();if(!r1.ok)throw new Error(d1.error?.message||'GPT-4o Fehler');const raw=d1.choices[0].message.content.trim();const match=raw.match(/\{[\s\S]*\}/);if(match){const p=JSON.parse(match[0]);wizCachedAnalysis[index]=p;if(p.roomType){roomType=p.roomType;wizCachedTypes[index]=roomType;}}}catch(e){console.warn(e);}}else{roomType=wizCachedTypes[index]||'Raum';setWizStep(2);}
+  const a=wizCachedAnalysis[index];
+  if(a){const mat=feedback?`Apply ONLY these user changes: "${feedback}". Keep everything else unchanged: ${a.renovationMaterials||'modern high-end European materials'}.`:`Use: ${a.renovationMaterials||'modern high-end European materials, bright and clean'}.`;editPrompt=buildEditPrompt(a,mat);}
+  else{editPrompt=feedback?`POSITION LOCK and SIZE LOCK. Apply ONLY: "${feedback}". Photorealistic renovation.`:`POSITION LOCK and SIZE LOCK. Modern renovation, same camera angle. Photorealistic.`;}
+  const inspStyle=await getInspirationStyle(key);
+  if(inspStyle&&a){const mat=feedback?`Apply ONLY these user changes: "${feedback}". Keep everything else unchanged: ${a.renovationMaterials||'modern high-end European materials'}.`:`Use: ${a.renovationMaterials||'modern high-end European materials, bright and clean'}.`;editPrompt=buildEditPrompt(a,mat,inspStyle);}
   setWizStep(2);
-  let imageBlob;
-  try { imageBlob=await resizeImagePNG(photos[index].full,1024); }
-  catch(e) { showErr('Bild-Vorbereitung fehlgeschlagen: '+e.message); document.getElementById('wizardLoading').classList.remove('on'); return; }
-
+  let imageBlob;try{imageBlob=await resizeImagePNG(photos[index].full,1024);}catch(e){showErr('Bild-Vorbereitung: '+e.message);document.getElementById('wizardLoading').classList.remove('on');return;}
   setWizStep(3);
-  try {
-    const fd=new FormData();
-    fd.append('model','gpt-image-1'); fd.append('image[]',imageBlob,'room.png');
-    fd.append('prompt',editPrompt); fd.append('n','1'); fd.append('size','auto'); fd.append('quality','high');
-    const response=await fetch('https://api.openai.com/v1/images/edits',
-      { method:'POST', headers:{'Authorization':'Bearer '+key}, body:fd });
-    const data=await response.json();
-    if (!response.ok) throw new Error(data.error?.message||'Bildgenerierung fehlgeschlagen');
-    const item=data.data[0];
-    const imgSrc=item.b64_json?'data:image/png;base64,'+item.b64_json:item.url;
-    wizResults[index]={ original:photos[index].full, result:imgSrc, roomType };
-    document.getElementById('wizardGrid').innerHTML=`
-      <div class="viz-item">
-        <img src="${photos[index].full}" alt="Vorher" />
-        <p>📷 IST-Zustand – Foto ${index+1}</p>
-      </div>
-      <div class="viz-item">
-        <img src="${imgSrc}" alt="Vorschlag" />
-        <p>✨ Verbesserungsvorschlag – ${roomType}</p>
-      </div>`;
-    document.getElementById('wizardDesc').textContent=feedback
-      ?`✅ Änderungen umgesetzt: "${feedback}" – Gleiche Raumgeometrie und alle Positionen beibehalten.`
-      :`✅ Moderner Renovierungsvorschlag für ${roomType} generiert – Oberflächen erneuert, Kamerawinkel & Maße identisch.`;
-    document.getElementById('wizardResult').style.display='block';
-    document.getElementById('wizardResult').scrollIntoView({ behavior:'smooth' });
-  } catch(e) { showErr('Visualisierung Fehler: '+e.message); }
+  try{const fd=new FormData();fd.append('model','gpt-image-1');fd.append('image[]',imageBlob,'room.png');if(inspirationPhoto){const ib=await resizeImagePNG(inspirationPhoto.full,1024);fd.append('image[]',ib,'inspiration.png');}fd.append('prompt',editPrompt);fd.append('n','1');fd.append('size','auto');fd.append('quality','high');const res=await fetch('https://api.openai.com/v1/images/edits',{method:'POST',headers:{'Authorization':'Bearer '+key},body:fd});const data=await res.json();if(!res.ok){const em=data.error?.message||'Unbekannter Fehler';throw new Error(em+(em.includes('billing')?' – OpenAI-Guthaben prüfen.':em.includes('key')?' – API-Key ungültig.':''));}const item=data.data[0];const imgSrc=item.b64_json?'data:image/png;base64,'+item.b64_json:item.url;wizResults[index]={original:photos[index].full,result:imgSrc,roomType};
+  document.getElementById('wizardGrid').innerHTML=`<div class="viz-item"><img src="${photos[index].full}" alt="Vorher"/><p>📷 IST-Zustand – Foto ${index+1}</p></div><div class="viz-item"><img src="${imgSrc}" alt="Vorschlag"/><p>✨ Verbesserungsvorschlag – ${roomType}${inspirationPhoto?' · 🖼️ Inspirationsstil':''}</p></div>`;
+  document.getElementById('wizardDesc').innerHTML=buildDetailedDescription(a,roomType,feedback);
+  document.getElementById('wizardResult').style.display='block';document.getElementById('wizardResult').scrollIntoView({behavior:'smooth'});}catch(e){showErr('Visualisierung Fehler: '+e.message);}
   document.getElementById('wizardLoading').classList.remove('on');
 }
-
-async function regenerateCurrentWiz() {
-  await generateWizPhoto(wizIndex, document.getElementById('wizardFeedback').value.trim());
-}
-async function nextWizPhoto() {
-  if (wizIndex<photos.length-1) await generateWizPhoto(wizIndex+1);
-}
-function finishWizard() {
-  document.getElementById('wizardSummaryGrid').innerHTML=wizResults.map((r,i)=>`
-    <div class="viz-item">
-      <img src="${r.original}" alt="Vorher ${i+1}" />
-      <p>📷 Vorher – Foto ${i+1}</p>
-    </div>
-    <div class="viz-item">
-      <img src="${r.result}" alt="Nachher ${i+1}" />
-      <p>✨ Nachher – ${r.roomType}</p>
-    </div>`).join('');
-  document.getElementById('wizardResult').style.display='none';
-  document.getElementById('wizardLoading').classList.remove('on');
-  document.getElementById('wizardSummary').style.display='block';
-  document.getElementById('wizardSummary').scrollIntoView({ behavior:'smooth' });
-}
+async function regenerateCurrentWiz(){await generateWizPhoto(wizIndex,document.getElementById('wizardFeedback').value.trim());}
+async function nextWizPhoto(){if(wizIndex<photos.length-1)await generateWizPhoto(wizIndex+1);}
+function finishWizard(){document.getElementById('wizardSummaryGrid').innerHTML=wizResults.map((r,i)=>`<div class="viz-item"><img src="${r.original}" alt="Vorher ${i+1}"/><p>📷 Vorher – Foto ${i+1}</p></div><div class="viz-item"><img src="${r.result}" alt="Nachher ${i+1}"/><p>✨ Nachher – ${r.roomType}</p></div>`).join('');document.getElementById('wizardResult').style.display='none';document.getElementById('wizardLoading').classList.remove('on');document.getElementById('wizardSummary').style.display='block';document.getElementById('wizardSummary').scrollIntoView({behavior:'smooth'});}
 
 // ===== RECHNUNG =====
-function previewInvoice() {
-  const nr=document.getElementById('inv-nr').value||'RE-2024-001';
-  const betrag=parseFloat(document.getElementById('inv-betrag').value||'0');
-  const email=document.getElementById('inv-email').value||'–';
-  const obj=document.getElementById('objekt').value||'Objekt';
-  document.getElementById('invoicePreview').innerHTML=`
-    <h4>Rechnung ${nr}</h4>
-    <p><strong>Empfänger:</strong> ${email}</p>
-    <p><strong>Leistung:</strong> Gebäudetrocknung & Sanierung – ${obj}</p>
-    <p><strong>Betrag (brutto):</strong> ${betrag.toLocaleString('de-DE',{minimumFractionDigits:2})} €</p>
-    <p><strong>Netto:</strong> ${(betrag/1.19).toLocaleString('de-DE',{minimumFractionDigits:2})} € · <strong>MwSt 19%:</strong> ${(betrag-betrag/1.19).toLocaleString('de-DE',{minimumFractionDigits:2})} €</p>`;
-  document.getElementById('invoicePreview').classList.add('on');
-}
-function sendInvoice() {
-  const email=document.getElementById('inv-email').value;
-  if (!email) { showErr('E-Mail fehlt.'); return; }
-  const nr=document.getElementById('inv-nr').value||'RE-2024-001';
-  const betrag=document.getElementById('inv-betrag').value||'0';
-  const obj=document.getElementById('objekt').value||'Objekt';
-  const subject=encodeURIComponent(`Rechnung ${nr} – Gebäudetrocknung Wiegand`);
-  const body=encodeURIComponent(`Sehr geehrte Damen und Herren,\n\nbitte überweisen Sie den Rechnungsbetrag von ${betrag} € für die Sanierungsarbeiten am Objekt "${obj}".\n\nRechnungsnummer: ${nr}\n\nMit freundlichen Grüßen\nGebäudetrocknung Wiegand\nTel: 01520 88 112 88`);
-  window.location.href=`mailto:${email}?subject=${subject}&body=${body}`;
-}
-function copyResult() {
-  navigator.clipboard.writeText(document.getElementById('resultContent').innerText)
-    .then(()=>alert('Analyse in die Zwischenablage kopiert!'))
-    .catch(()=>showErr('Kopieren fehlgeschlagen.'));
-}
+function previewInvoice(){const nr=document.getElementById('inv-nr').value||'RE-2024-001';const betrag=parseFloat(document.getElementById('inv-betrag').value||'0');const email=document.getElementById('inv-email').value||'–';const obj=document.getElementById('objekt').value||'Objekt';document.getElementById('invoicePreview').innerHTML=`<h4>Rechnung ${nr}</h4><p><strong>Empfänger:</strong> ${email}</p><p><strong>Leistung:</strong> Gebäudetrocknung & Sanierung – ${obj}</p><p><strong>Betrag (brutto):</strong> ${betrag.toLocaleString('de-DE',{minimumFractionDigits:2})} €</p><p><strong>Netto:</strong> ${(betrag/1.19).toLocaleString('de-DE',{minimumFractionDigits:2})} € · <strong>MwSt 19%:</strong> ${(betrag-betrag/1.19).toLocaleString('de-DE',{minimumFractionDigits:2})} €</p>`;document.getElementById('invoicePreview').classList.add('on');}
+function sendInvoice(){const email=document.getElementById('inv-email').value;if(!email){showErr('E-Mail fehlt.');return;}const nr=document.getElementById('inv-nr').value||'RE-2024-001';const betrag=document.getElementById('inv-betrag').value||'0';const obj=document.getElementById('objekt').value||'Objekt';window.location.href=`mailto:${email}?subject=${encodeURIComponent('Rechnung '+nr+' – Gebäudetrocknung Wiegand')}&body=${encodeURIComponent('Sehr geehrte Damen und Herren,\n\nbitte überweisen Sie den Rechnungsbetrag von '+betrag+' € für die Sanierungsarbeiten am Objekt "'+obj+'".\n\nRechnungsnummer: '+nr+'\n\nMit freundlichen Grüßen\nGebäudetrocknung Wiegand\nTel: 01520 88 112 88')}`;}
+function copyResult(){navigator.clipboard.writeText(document.getElementById('resultContent').innerText).then(()=>alert('Analyse in die Zwischenablage kopiert!')).catch(()=>showErr('Kopieren fehlgeschlagen.'));}
 </script>
 </body>
 </html>
