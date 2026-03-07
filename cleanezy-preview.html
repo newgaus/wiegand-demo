@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Cleanezy – KI-Schadensdokumentation</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: 'Inter', sans-serif; margin: 0; background: #f9fafb; }
+  @keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-4px)} }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
+  .animate-bounce { animation: bounce 1s infinite; }
+  .animate-spin { animation: spin 1s linear infinite; }
+  .animate-pulse { animation: pulse 2s infinite; }
+  .sidebar { width: 256px; min-width: 256px; }
+  .right-panel { width: 320px; min-width: 320px; }
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 2px; }
+</style>
+</head>
+<body class="flex h-screen overflow-hidden bg-gray-50 text-gray-900">
+
+<!-- ── SIDEBAR ── -->
+<aside class="sidebar flex h-screen flex-col border-r border-blue-800 bg-blue-900 text-blue-50">
+  <div class="flex items-center gap-2 px-5 py-5">
+    <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-500 text-white shadow-sm">
+      <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
+    </div>
+    <div>
+      <p class="text-sm font-semibold tracking-tight">Cleanezy</p>
+      <p class="text-xs text-blue-200">Monday & Slack fürs Handwerk</p>
+    </div>
+  </div>
+
+  <nav class="mt-2 flex-1 space-y-1 px-3 text-sm">
+    <button onclick="setNav(this,'dashboard')" class="nav-btn active flex w-full items-center gap-2 rounded-xl bg-blue-700 px-3 py-2 text-left text-xs font-medium text-white shadow-sm">
+      <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Dashboard
+    </button>
+    <button onclick="setNav(this,'projekte')" class="nav-btn flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-medium text-blue-100 hover:bg-blue-800/60 hover:text-white">
+      <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7"/></svg>
+      Projekte
+    </button>
+    <button onclick="setNav(this,'kalender')" class="nav-btn flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-medium text-blue-100 hover:bg-blue-800/60 hover:text-white">
+      <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 2v4M8 2v4M3 10h18"/></svg>
+      Kalender
+    </button>
+    <button onclick="setNav(this,'crm')" class="nav-btn flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-medium text-blue-100 hover:bg-blue-800/60 hover:text-white">
+      <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+      Kontakte (CRM)
+    </button>
+    <button onclick="setNav(this,'chat')" class="nav-btn flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-medium text-blue-100 hover:bg-blue-800/60 hover:text-white">
+      <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+      Team-Chat
+    </button>
+    <button onclick="setNav(this,'rechnungen')" class="nav-btn flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-medium text-blue-100 hover:bg-blue-800/60 hover:text-white">
+      <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+      Rechnungen
+    </button>
+    <button onclick="setNav(this,'labor')" class="nav-btn flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-medium text-blue-100 hover:bg-blue-800/60 hover:text-white">
+      <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
+      3D / KI-Labor
+    </button>
+  </nav>
+
+  <div class="border-t border-blue-800 px-4 py-4 text-xs">
+    <p class="text-blue-200">Eingeloggt als</p>
+    <div class="mt-1 flex items-center gap-2">
+      <div class="flex h-7 w-7 items-center justify-center rounded-full bg-blue-700 text-[11px] font-semibold text-white">WW</div>
+      <div>
+        <p class="text-sm font-medium leading-tight">Werner Wiegand</p>
+        <p class="text-[11px] text-blue-200">Geschäftsführer</p>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- ── MAIN ── -->
+<div class="flex flex-1 flex-col overflow-hidden">
+
+  <!-- Topbar -->
+  <header class="flex h-16 shrink-0 items-center justify-between border-b bg-white px-6 shadow-sm">
+    <div class="flex items-center gap-2 text-sm text-gray-500">
+      <span class="font-medium text-gray-900">Dashboard</span>
+      <span class="text-gray-300">/</span>
+      <span>Aktive Bauprojekte</span>
+    </div>
+    <div class="flex items-center gap-3">
+      <div class="relative flex items-center">
+        <svg class="absolute left-3 h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input oninput="filterProjects(this.value)" type="text" placeholder="Suche Projekte, Kunden…" class="w-64 rounded-full border border-gray-200 bg-gray-50 py-1.5 pl-9 pr-3 text-xs outline-none focus:border-blue-400" />
+      </div>
+      <button class="inline-flex items-center gap-1.5 rounded-full bg-blue-600 px-4 py-2 text-xs font-medium text-white shadow-sm hover:bg-blue-700 transition">
+        <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
+        Neuer Schaden (KI)
+      </button>
+    </div>
+  </header>
+
+  <!-- Content row -->
+  <div class="flex flex-1 overflow-hidden">
+
+    <!-- Table area -->
+    <main class="flex-1 overflow-y-auto px-6 py-6">
+      <div class="mb-4 flex items-center justify-between">
+        <div>
+          <h1 class="text-xl font-semibold tracking-tight">Aktive Bauprojekte</h1>
+          <p class="mt-1 text-xs text-gray-500">Alle laufenden Schadenfälle mit Status von Leckortung bis Sanierung.</p>
+        </div>
+        <div class="flex items-center gap-2 text-xs text-gray-500">
+          <span class="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-1">
+            <span class="mr-1 h-1.5 w-1.5 rounded-full bg-emerald-500 inline-block"></span>4 Projekte
+          </span>
+          <span class="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-1">
+            <span class="mr-1 h-1.5 w-1.5 rounded-full bg-amber-400 inline-block"></span>2 aktiv
+          </span>
+        </div>
+      </div>
+
+      <div class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+        <table class="min-w-full divide-y divide-gray-100 text-xs" id="projectTable">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-4 py-2 text-left text-[11px] font-semibold uppercase tracking-wide text-gray-500">Projektname</th>
+              <th class="px-4 py-2 text-left text-[11px] font-semibold uppercase tracking-wide text-gray-500">Status</th>
+              <th class="px-4 py-2 text-left text-[11px] font-semibold uppercase tracking-wide text-gray-500">Kunde</th>
+              <th class="px-4 py-2 text-left text-[11px] font-semibold uppercase tracking-wide text-gray-500">LO</th>
+              <th class="px-4 py-2 text-left text-[11px] font-semibold uppercase tracking-wide text-gray-500">Rückbau</th>
+              <th class="px-4 py-2 text-left text-[11px] font-semibold uppercase tracking-wide text-gray-500">Trocknung</th>
+              <th class="px-4 py-2 text-left text-[11px] font-semibold uppercase tracking-wide text-gray-500">Sanierung</th>
+              <th class="px-4 py-2 text-left text-[11px] font-semibold uppercase tracking-wide text-gray-500">Verantwortung</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody" class="divide-y divide-gray-100 bg-white"></tbody>
+        </table>
+      </div>
+    </main>
+
+    <!-- Right Panel -->
+    <aside class="right-panel flex flex-col border-l border-gray-200 bg-white overflow-hidden">
+      <div class="border-b border-gray-100 px-4 py-3">
+        <p class="text-xs font-semibold text-gray-900">KI-Assistent & Raumanalyse</p>
+        <p class="text-[11px] text-gray-500">Chat · Bild · Video · 3D-Konzept</p>
+      </div>
+
+      <!-- Chat messages -->
+      <div id="chatMessages" class="flex-1 overflow-y-auto px-3 py-3 space-y-3 text-xs">
+        <div class="flex justify-start">
+          <div class="max-w-[85%] rounded-2xl rounded-bl-sm bg-gray-100 px-3 py-2 text-[11px] shadow-sm">
+            <p class="mb-0.5 text-[10px] font-semibold text-gray-500">Cleanezy KI</p>
+            <p>Hallo Werner! 👋 Lade ein Bild oder Video hoch, oder beschreibe einen Schaden – ich analysiere ihn für dich.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Upload zone -->
+      <div class="border-t border-gray-100 px-3 py-2">
+        <div id="uploadZone" ondragover="event.preventDefault();this.classList.add('border-blue-400','bg-blue-50')" ondragleave="this.classList.remove('border-blue-400','bg-blue-50')" ondrop="handleDrop(event)" onclick="document.getElementById('fileInput').click()" class="flex cursor-pointer flex-col items-center justify-center gap-1.5 rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 p-3 text-center transition hover:border-blue-400 hover:bg-blue-50/40">
+          <div class="flex items-center gap-2 text-gray-400">
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg>
+          </div>
+          <p class="text-[11px] font-medium text-gray-700">Bild, Video oder Audio</p>
+          <p class="text-[10px] text-gray-400">Drag & Drop oder klicken · max. 50 MB</p>
+        </div>
+        <input type="file" id="fileInput" accept="image/*,video/*,audio/*" class="hidden" onchange="handleFileSelect(this)" />
+      </div>
+
+      <!-- Action buttons -->
+      <div class="border-t border-gray-100 px-3 py-2">
+        <div class="flex gap-2">
+          <button onclick="simulateFloorplan()" class="flex flex-1 items-center justify-center gap-1.5 rounded-full bg-blue-50 px-2 py-1.5 text-[11px] font-semibold text-blue-700 ring-1 ring-inset ring-blue-200 hover:bg-blue-100 transition">📐 Grundriss</button>
+          <button onclick="simulate3D()" class="flex flex-1 items-center justify-center gap-1.5 rounded-full bg-blue-50 px-2 py-1.5 text-[11px] font-semibold text-blue-700 ring-1 ring-inset ring-blue-200 hover:bg-blue-100 transition">🧊 3D-Konzept</button>
+        </div>
+      </div>
+
+      <!-- Chat input -->
+      <form onsubmit="sendMessage(event)" class="border-t border-gray-100 px-3 py-3">
+        <div class="flex items-center gap-2 rounded-full border border-gray-200 bg-gray-50 px-3 py-1.5">
+          <svg class="h-3.5 w-3.5 shrink-0 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
+          <input id="chatInput" type="text" placeholder="Schaden beschreiben oder Frage stellen…" class="h-6 flex-1 bg-transparent text-[11px] text-gray-800 outline-none placeholder:text-gray-400" />
+          <button id="micBtn" type="button" onclick="toggleMic()" class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-500 text-white hover:bg-blue-600 transition">
+            <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg>
+          </button>
+          <button type="submit" class="shrink-0 rounded-full bg-blue-600 px-3 py-1 text-[10px] font-semibold text-white hover:bg-blue-700 transition">Senden</button>
+        </div>
+      </form>
+    </aside>
+  </div>
+</div>
+
+<script>
+// ── Demo Daten ──
+const projects = [
+  { id:1, name:"Wasserschaden Müller", customer:"Hans Müller, Hauptstr. 12", status:"Aktiv", lo:"Erledigt", rueckbau:"Läuft", trocknung:"Wartet", sanierung:"Wartet", owner:"Werner Wiegand" },
+  { id:2, name:"Rohrbruch Schmitt", customer:"Anna Schmitt, Bahnhofstr. 5", status:"Aktiv", lo:"Erledigt", rueckbau:"Erledigt", trocknung:"Läuft", sanierung:"Wartet", owner:"Thomas Klein" },
+  { id:3, name:"Kellersanierung Weber", customer:"GmbH Weber & Co., Industrieweg 8", status:"Abgeschlossen", lo:"Erledigt", rueckbau:"Erledigt", trocknung:"Erledigt", sanierung:"Erledigt", owner:"Werner Wiegand" },
+  { id:4, name:"Dachschaden Braun", customer:"Familie Braun, Lindenallee 3", status:"Wartend", lo:"Wartet", rueckbau:"Wartet", trocknung:"Wartet", sanierung:"Wartet", owner:"Lisa Hoffmann" },
+];
+
+function badge(status) {
+  const map = { Erledigt:"bg-emerald-50 text-emerald-700 ring-emerald-100", Läuft:"bg-amber-50 text-amber-700 ring-amber-100", Wartet:"bg-gray-100 text-gray-600 ring-gray-200" };
+  return `<span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${map[status]||map.Wartet}">${status}</span>`;
+}
+
+function initials(name) { return name.split(" ").map(p=>p[0]).join("").slice(0,2).toUpperCase(); }
+
+function renderTable(data) {
+  const tbody = document.getElementById("tableBody");
+  tbody.innerHTML = data.map(p => `
+    <tr class="hover:bg-blue-50/40 cursor-pointer transition">
+      <td class="whitespace-nowrap px-4 py-3 align-top">
+        <div class="flex flex-col">
+          <span class="text-xs font-medium text-gray-900">${p.name}</span>
+          <span class="text-[11px] text-gray-500">Schadenakte · ${p.customer.split(",")[0]}</span>
+        </div>
+      </td>
+      <td class="whitespace-nowrap px-4 py-3"><span class="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-medium text-blue-700 ring-1 ring-inset ring-blue-100">${p.status}</span></td>
+      <td class="whitespace-nowrap px-4 py-3 text-[11px] text-gray-700">${p.customer}</td>
+      <td class="whitespace-nowrap px-4 py-3">${badge(p.lo)}</td>
+      <td class="whitespace-nowrap px-4 py-3">${badge(p.rueckbau)}</td>
+      <td class="whitespace-nowrap px-4 py-3">${badge(p.trocknung)}</td>
+      <td class="whitespace-nowrap px-4 py-3">${badge(p.sanierung)}</td>
+      <td class="whitespace-nowrap px-4 py-3">
+        <span class="inline-flex items-center gap-2">
+          <span class="flex h-6 w-6 items-center justify-center rounded-full bg-blue-100 text-[10px] font-semibold text-blue-700">${initials(p.owner)}</span>
+          <span class="text-[11px] font-medium text-gray-800">${p.owner}</span>
+        </span>
+      </td>
+    </tr>`).join("");
+}
+
+function filterProjects(q) {
+  const filtered = q ? projects.filter(p => p.name.toLowerCase().includes(q.toLowerCase()) || p.customer.toLowerCase().includes(q.toLowerCase())) : projects;
+  renderTable(filtered);
+}
+
+// ── Navigation ──
+function setNav(btn, id) {
+  document.querySelectorAll('.nav-btn').forEach(b => { b.classList.remove('bg-blue-700','text-white','shadow-sm'); b.classList.add('text-blue-100'); });
+  btn.classList.add('bg-blue-700','text-white','shadow-sm');
+  btn.classList.remove('text-blue-100');
+}
+
+// ── Chat ──
+const aiResponses = [
+  "⚠️ **Wasserschaden Kategorie 2** erkannt. Empfehle sofortige Feuchtemessung (CM-Messung) und Einsatz von 2-3 Kondensationstrocknern.\n\n✅ Nächste Schritte:\n1. Leckortung abschließen\n2. Estrich auf Feuchte messen\n3. Trocknungsprotokoll anlegen\n\n💶 Kostenschätzung: 2.400 – 4.800 EUR",
+  "Basierend auf der Beschreibung empfehle ich:\n\n🔧 **Sofortmaßnahmen:**\n- Feuchteschaden dokumentieren (Fotos)\n- Wasserversorgung absperren\n- Versicherung informieren\n\n⏱️ Trocknungsdauer: ca. 3-6 Wochen",
+  "✅ **Schimmelbefall Klasse S1** – begrenzt auf unter 0,5 m². Behandlung mit Schimmelentferner möglich.\n\n⚠️ Achtung: Schutzausrüstung (FFP2-Maske, Handschuhe) tragen!\n\n💶 Kosten: 300 – 800 EUR",
+];
+let aiIdx = 0;
+
+function addMessage(text, role) {
+  const div = document.createElement("div");
+  div.className = `flex ${role==="user"?"justify-end":"justify-start"}`;
+  div.innerHTML = `<div class="max-w-[85%] rounded-2xl ${role==="user"?"rounded-br-sm bg-blue-600 text-white":"rounded-bl-sm bg-gray-100 text-gray-800"} px-3 py-2 text-[11px] leading-snug shadow-sm">
+    ${role==="ai"?'<p class="mb-0.5 text-[10px] font-semibold text-gray-500">Cleanezy KI</p>':""}
+    <p class="whitespace-pre-wrap">${text}</p>
+  </div>`;
+  const container = document.getElementById("chatMessages");
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+function showTyping() {
+  const div = document.createElement("div");
+  div.id = "typing";
+  div.className = "flex justify-start";
+  div.innerHTML = `<div class="max-w-[70%] rounded-2xl rounded-bl-sm bg-gray-100 px-3 py-2 text-[11px] shadow-sm">
+    <p class="mb-0.5 text-[10px] font-semibold text-gray-500">Cleanezy KI</p>
+    <div class="flex items-center gap-1.5">
+      <span class="h-1.5 w-1.5 animate-bounce rounded-full bg-gray-400 inline-block"></span>
+      <span class="h-1.5 w-1.5 animate-bounce rounded-full bg-gray-400 inline-block" style="animation-delay:120ms"></span>
+      <span class="h-1.5 w-1.5 animate-bounce rounded-full bg-gray-400 inline-block" style="animation-delay:240ms"></span>
+    </div>
+  </div>`;
+  document.getElementById("chatMessages").appendChild(div);
+  document.getElementById("chatMessages").scrollTop = 99999;
+}
+
+function sendMessage(e) {
+  e.preventDefault();
+  const input = document.getElementById("chatInput");
+  const text = input.value.trim();
+  if (!text) return;
+  addMessage(text, "user");
+  input.value = "";
+  showTyping();
+  setTimeout(() => {
+    document.getElementById("typing")?.remove();
+    addMessage(aiResponses[aiIdx % aiResponses.length], "ai");
+    aiIdx++;
+  }, 1500);
+}
+
+// ── Mic ──
+let micActive = false;
+function toggleMic() {
+  micActive = !micActive;
+  const btn = document.getElementById("micBtn");
+  btn.className = `flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-white transition ${micActive?"animate-pulse bg-red-500":"bg-blue-500 hover:bg-blue-600"}`;
+  if (micActive) {
+    setTimeout(() => {
+      micActive = false;
+      btn.className = "flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-white transition bg-blue-500 hover:bg-blue-600";
+      document.getElementById("chatInput").value = "Wasserschaden im Badezimmer, ca. 4 Quadratmeter betroffen";
+    }, 2500);
+  }
+}
+
+// ── Upload ──
+function handleFileSelect(input) {
+  const file = input.files[0];
+  if (file) simulateAnalysis(file.name);
+}
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById("uploadZone").classList.remove("border-blue-400","bg-blue-50");
+  const file = e.dataTransfer.files[0];
+  if (file) simulateAnalysis(file.name);
+}
+
+function simulateAnalysis(filename) {
+  addMessage(`Analysiere: ${filename}`, "user");
+  showTyping();
+  setTimeout(() => {
+    document.getElementById("typing")?.remove();
+    addMessage(`✅ **Raumanalyse abgeschlossen:**\n🏠 Badezimmer (94% sicher) · ca. 3,2m × 2,8m\n📐 Rechteck-Grundriss · 9,0 m²\n⚠️ Schäden: Wasserflecken an Wand, Verfärbungen am Boden\n\nSanierungskonzept wird erstellt…`, "ai");
+    setTimeout(() => {
+      addMessage(`🧊 **3D-Sanierungskonzept bereit:**\n\n📋 Schritte:\n1. Feuchtigkeitsmessung & Dokumentation\n2. Fliesen demontieren (beschädigte Bereiche)\n3. Trocknung mit 2 Kondensationstrocknern\n4. Neue Abdichtung auftragen\n5. Neuverfliesung\n\n💶 Kosten: 3.200 – 5.600 EUR`, "ai");
+    }, 1200);
+  }, 2000);
+}
+
+function simulateFloorplan() {
+  addMessage("KI-Grundriss generieren", "user");
+  showTyping();
+  setTimeout(() => {
+    document.getElementById("typing")?.remove();
+    addMessage("📐 Grundriss wird mit DALL-E 3 generiert… (in der echten App erscheint hier ein technischer Architektenplan)", "ai");
+  }, 1800);
+}
+
+function simulate3D() {
+  addMessage("3D-Sanierungsmodell erstellen", "user");
+  showTyping();
+  setTimeout(() => {
+    document.getElementById("typing")?.remove();
+    addMessage("🧊 3D-Modell wird via Meshy AI generiert… (in der echten App erscheint hier ein interaktives 3D-Modell mit OrbitControls)", "ai");
+  }, 1800);
+}
+
+// Init
+renderTable(projects);
+</script>
+</body>
+</html>
